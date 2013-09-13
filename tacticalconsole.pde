@@ -1,0 +1,472 @@
+import processing.serial.*;
+
+import java.awt.Point;
+import oscP5.*;
+import netP5.*;
+
+import java.util.Hashtable;
+
+
+//CHANGE ME
+boolean testMode = true;
+
+
+boolean serialEnabled = false;
+String serverIP = "127.0.0.1";
+
+
+
+
+OscP5 oscP5;
+
+DropDisplay dropDisplay;
+//RadarDisplay radarDisplay;
+WarpDisplay warpDisplay;
+WeaponsConsole weaponsDisplay;
+SignalTracker signalTracker;
+TowingDisplay towingDisplay;
+
+BannerOverlay bannerSystem = new BannerOverlay();
+
+BootDisplay bootDisplay;
+
+long deathTime = 0;
+
+
+
+
+PFont font;
+
+//display handling
+Hashtable<String, Display> displayMap = new Hashtable<String, Display>();
+Display currentScreen;
+
+/*
+Display[] displayList = new Display[5];
+ 
+ int[] displayListMap = {2,0,1,2,2,0,3};
+ int currentDisplay = 2;*/
+
+int systemPower = -1;
+
+Serial serialPort;
+String serialBuffer = "";
+String lastSerial = "";
+
+
+//hearbeat stuff
+long heartBeatTimer = 0;
+
+int damageTimer = -1000;
+PImage noiseImage;
+
+ShipState shipState = new ShipState();
+
+void setup() {
+
+  if (testMode) {
+    serialEnabled = false;
+    serverIP = "127.0.0.1";
+    shipState.poweredOn = true;
+  } 
+  else {
+    serialEnabled = true;
+    serverIP = "10.0.0.100";
+  }
+
+  size(1024, 768, P3D);
+  frameRate(25);
+  serialPort = new Serial(this, "/dev/ttyUSB9", 9600);
+
+  oscP5 = new OscP5(this, 12004);
+  dropDisplay = new DropDisplay();
+  //radarDisplay = new RadarDisplay();
+  warpDisplay = new WarpDisplay();
+  weaponsDisplay = new WeaponsConsole(oscP5, serverIP, this);
+  signalTracker = new SignalTracker(oscP5, serverIP);
+  towingDisplay = new TowingDisplay(oscP5, serverIP);
+
+
+  displayMap.put("weapons", weaponsDisplay);
+  displayMap.put("drop", dropDisplay);
+  displayMap.put("hyperspace", warpDisplay);
+  displayMap.put("signalTracker", signalTracker);
+  displayMap.put("selfdestruct", new DestructDisplay());
+  displayMap.put("towing", towingDisplay);
+  displayMap.put("pwned", new PwnedDisplay());
+  currentScreen = towingDisplay;
+
+  bootDisplay = new BootDisplay();
+  displayMap.put("boot", bootDisplay);    ///THIS    
+
+  font = loadFont("HanzelExtendedNormal-48.vlw");
+
+  /* power down the tac console panel */
+  if (serialEnabled) {
+    serialPort.write("p,");
+  }
+  noiseImage = loadImage("noise.png");
+
+  /*sync to current game screen*/
+  OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
+  oscP5.send(myMessage, new NetAddress(serverIP, 12000));
+}
+
+void keyPressed() {
+  if (key >= '0' && key <= '9') {
+    currentScreen.serialEvent("KEY:" + key);
+  } 
+  else if ( key == ' ') {
+    currentScreen.serialEvent("KEY:SCAN");
+  } 
+  else if ( key == 'm') {
+    currentScreen.serialEvent("KEY:FIRELASER" );
+  } 
+  else if ( key == 'f') {
+    currentScreen.serialEvent("KEY:DECOY");
+  } 
+  else if (key == 'g') {
+    currentScreen.serialEvent("KEY:GRAPPLEFIRE");
+  } 
+  else if (key == 'h') {
+    currentScreen.serialEvent("KEY:GRAPPLERELEASE");
+  }
+}
+
+void dealWithSerial(String vals) {
+  // println(vals);
+
+  char c = vals.charAt(0);
+  if (c >= '0' && c <= '9') {
+    String v = "KEY:" + c;
+    currentScreen.serialEvent(v);
+  }
+  if (c == ' ') {
+    currentScreen.serialEvent("KEY:SCAN");
+  }
+  if (c == 'F') {
+    currentScreen.serialEvent("KEY:FIRELASER");
+  }
+  if (c == 'm') {
+    currentScreen.serialEvent("KEY:DECOY");
+  }
+
+  if (c == 'X') {
+    currentScreen.serialEvent("CONDUIT:X");
+  } 
+  if (c == 'P') {
+    currentScreen.serialEvent("CONDUIT:P");
+  }
+  if (c == 'C') {
+
+    currentScreen.serialEvent("CONDUIT:" + vals.charAt(1));
+  }
+}
+
+/* switch to a new display */
+void changeDisplay(Display d) {
+  currentScreen.stop();
+  currentScreen = d;
+  currentScreen.start();
+}
+
+
+void draw() {
+  noSmooth();
+  while (serialPort.available () > 0) {
+    char val = serialPort.readChar();
+    //println(val);
+    if (val == ',') {
+      //get first char
+      dealWithSerial(serialBuffer);
+      serialBuffer = "";
+    } 
+    else {
+      serialBuffer += val;
+    }
+  }
+
+
+
+
+  background(0, 0, 0);
+
+  if (shipState.areWeDead) {
+    fill(255, 255, 255);
+    if (deathTime + 2000 < millis()) {
+      textFont(font, 60);
+      text("YOU ARE DEAD", 50, 300);
+      textFont(font, 20);
+      int pos = (int)textWidth(shipState.deathText);
+      text(shipState.deathText, (width/2) - pos/2, 340);
+    }
+  } 
+  else {
+
+    if (shipState.poweredOn) {
+      currentScreen.draw();
+    } 
+    else {
+      if (shipState.poweringOn) {
+        bootDisplay.draw();
+        if (bootDisplay.isReady()) {
+          shipState.poweredOn = true;
+          shipState.poweringOn = false;
+          /* sync current display to server */
+          OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
+          oscP5.send(myMessage, new NetAddress(serverIP, 12000));
+        }
+      }
+    }
+    bannerSystem.draw();
+  }
+
+  if (heartBeatTimer > 0) {
+    if (heartBeatTimer + 400 > millis()) {
+      int a = (int)map(millis() - heartBeatTimer, 0, 400, 255, 0);
+      fill(0, 0, 0, a);
+      rect(0, 0, width, height);
+    } 
+    else {
+      heartBeatTimer = -1;
+    }
+  }
+  if ( damageTimer + 1000 > millis()) {
+    if (random(10) > 3) {
+      image(noiseImage, 0, 0, width, height);
+    }
+  }
+}
+
+void oscEvent(OscMessage theOscMessage) {
+  // println(theOscMessage);
+  if (theOscMessage.checkAddrPattern("/scene/change")==true) {
+    /*
+    int disp = theOscMessage.get(0).intValue();
+     if (disp > displayListMap.length ) {
+     disp = 0;
+     }
+     println(disp);
+     disp = displayListMap[disp];
+     println(disp);
+     displayList[currentDisplay].stop();
+     currentDisplay = disp;
+     displayList[currentDisplay].start();
+     return;*/
+  } 
+  else if (theOscMessage.checkAddrPattern("/scene/warzone/weaponState") == true) {
+    int msg = theOscMessage.get(0).intValue();
+    if (msg == 1) {
+      if (serialEnabled) {
+        serialPort.write("P,");
+      }
+    } 
+    else {
+      if (serialEnabled) {
+
+        serialPort.write("p,");
+      }
+    }
+
+    currentScreen.oscMessage(theOscMessage);
+  } 
+  else if (theOscMessage.checkAddrPattern("/system/reactor/stateUpdate")==true) {
+    int state = theOscMessage.get(0).intValue();
+    String flags = theOscMessage.get(1).stringValue();
+    String[] fList = flags.split(";");
+    //reset flags
+    bootDisplay.brokenBoot = false;
+    for (String f : fList) {
+      if (f.equals("BROKENBOOT")) {
+        println("BROKEN BOOT");
+        bootDisplay.brokenBoot = true;
+      }
+    }
+
+    if (state == 0) {
+      shipState.poweredOn = false;
+      shipState.poweringOn = false;
+      bootDisplay.stop();
+      bootDisplay.stop();
+      bannerSystem.cancel();
+      if (serialEnabled) {
+        serialPort.write("p,");
+      }
+    } 
+    else {
+
+
+      if (!shipState.poweredOn ) {
+        shipState.poweringOn = true;
+
+        changeDisplay(bootDisplay);
+        if (serialEnabled) {
+          serialPort.write("P,");
+        }
+      }
+    }
+  } 
+  else if (theOscMessage.checkAddrPattern("/scene/youaredead") == true) {
+    //oh noes we died
+    shipState.areWeDead = true;
+    deathTime = millis();
+    shipState.deathText = theOscMessage.get(0).stringValue();
+    if (serialEnabled) {
+      serialPort.write("p,");
+    }
+  } 
+  else if (theOscMessage.checkAddrPattern("/game/reset") == true) {
+    //reset the entire game
+    changeDisplay(weaponsDisplay);
+    shipState.areWeDead = false;
+    shipState.poweredOn = false;
+    shipState.poweringOn = false;
+    if (serialEnabled) {
+      serialPort.write("p,");
+    }
+    shipState.smartBombsLeft = 6;
+  } 
+  else if (theOscMessage.checkAddrPattern("/system/subsystemstate") == true) {
+    systemPower = theOscMessage.get(1).intValue() + 1;
+    currentScreen.oscMessage(theOscMessage);
+  }
+  else if (theOscMessage.checkAddrPattern("/tactical/powerState") == true) {
+
+    if (theOscMessage.get(0).intValue() == 1) {
+      shipState.poweredOn = true;
+      shipState.poweringOn = false;
+      bootDisplay.stop();
+      if (serialEnabled) {
+
+        serialPort.write("P,");
+      }
+    } 
+    else {
+      shipState.poweredOn = false;
+      shipState.poweringOn = false;
+      if (serialEnabled) {
+
+        serialPort.write("p,");
+      }
+    }
+  }
+  else if (theOscMessage.checkAddrPattern("/ship/effect/heartbeat") == true) {
+    heartBeatTimer = millis();
+  } 
+  else if (theOscMessage.checkAddrPattern("/ship/damage")==true) {
+
+    damageTimer = millis();
+    if (serialEnabled) {
+
+      serialPort.write("S,");
+    }
+  } 
+  else if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
+    int beamPower = theOscMessage.get(3).intValue() - 1;  //write charge rate
+    println(beamPower);
+    if (serialEnabled) {
+      serialPort.write("L" + beamPower + ",");
+    }
+    currentScreen.oscMessage(theOscMessage);
+  } 
+  else if (theOscMessage.checkAddrPattern("/ship/transform") == true) {
+    shipState.shipPos.x = theOscMessage.get(0).floatValue();
+    shipState.shipPos.y = theOscMessage.get(1).floatValue();
+    shipState.shipPos.z = theOscMessage.get(2).floatValue();
+
+    shipState.shipRot.x = theOscMessage.get(3).floatValue();
+    shipState.shipRot.y = theOscMessage.get(4).floatValue();
+    shipState.shipRot.z = theOscMessage.get(5).floatValue();
+
+    shipState.shipVel.x = theOscMessage.get(6).floatValue();
+    shipState.shipVel.y = theOscMessage.get(7).floatValue();
+    shipState.shipVel.z = theOscMessage.get(8).floatValue();
+  } 
+  else if ( theOscMessage.checkAddrPattern("/clientscreen/TacticalStation/changeTo") ) {
+    String changeTo = theOscMessage.get(0).stringValue();
+    try {
+      Display d = displayMap.get(changeTo);
+      println("found display for : " + changeTo);
+      if (d == null) { 
+        d = weaponsDisplay;
+      }
+      changeDisplay(d);
+    } 
+    catch(Exception e) {
+      println("no display found for " + changeTo);
+      changeDisplay(weaponsDisplay);
+    }
+  } 
+  else if (theOscMessage.checkAddrPattern("/clientscreen/showBanner") ) {
+    String title = theOscMessage.get(0).stringValue();
+    String text = theOscMessage.get(1).stringValue();
+    int duration = theOscMessage.get(2).intValue();
+
+    bannerSystem.setSize(700, 300);
+    bannerSystem.setTitle(title);
+    bannerSystem.setText(text);
+    bannerSystem.displayFor(duration);
+  } else if (theOscMessage.checkAddrPattern("/system/boot/diskNumbers") ) {
+
+    int[] disks = { 
+      theOscMessage.get(0).intValue(), theOscMessage.get(1).intValue(), theOscMessage.get(2).intValue()
+    };
+    println(disks);
+    bootDisplay.setDisks(disks);  
+  } else {
+      currentScreen.oscMessage(theOscMessage);
+    }
+  }
+
+  void mouseClicked() {
+    println (":" + mouseX + "," + mouseY);
+  }
+
+  boolean decoyLightState = false;
+  void decoyLightState(boolean s) {
+    if (serialEnabled == false) { 
+      return;
+    };
+    if (s && decoyLightState == false) {
+      // println("poo");
+      decoyLightState = true;
+      serialPort.write("D,");
+    } 
+    else if (!s && decoyLightState == true) {
+      serialPort.write("d,");
+      decoyLightState = false;
+    }
+  }
+
+
+  public class ShipState {
+
+    public int smartBombsLeft = 6;
+    public boolean poweredOn = false;
+    public boolean poweringOn = false ;
+    public boolean areWeDead = false;
+    public String deathText = "";
+
+    public PVector shipPos = new PVector(0, 0, 0);
+    public PVector shipRot = new PVector(0, 0, 0);
+    public PVector shipVel = new PVector(0, 0, 0);
+
+
+    public ShipState() {
+    };
+
+    public void resetState() {
+    }
+  }
+
+
+  /* change this scene to show the altitude and predicted death time*/
+  public interface Display {
+
+    public void draw();
+    public void oscMessage(OscMessage theOscMessage);
+    public void start();
+    public void stop();
+    public void serialEvent(String content);
+  }
+
