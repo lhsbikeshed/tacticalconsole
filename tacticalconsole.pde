@@ -7,58 +7,58 @@ import netP5.*;
 import java.util.Hashtable;
 
 
-//CHANGE ME
+//CHANGE ME for testing
+//disables serial port access
+//and sets server to localhost
 boolean testMode = true;
+
+
+
+//dont change anything past here. Things will break
 
 
 boolean serialEnabled = false;
 String serverIP = "127.0.0.1";
 
-
-
-
 OscP5 oscP5;
 
-DropDisplay dropDisplay;
-//RadarDisplay radarDisplay;
-WarpDisplay warpDisplay;
-WeaponsConsole weaponsDisplay;
-SignalTracker signalTracker;
-TowingDisplay towingDisplay;
+DropDisplay dropDisplay; //display for the drop scene
+WarpDisplay warpDisplay; //warp scene
+WeaponsConsole weaponsDisplay;  //tactical weapons display
+SignalTracker signalTracker;    //signal tracker for nebula scene
+TowingDisplay towingDisplay;    //grappling hook display
 
+BootDisplay bootDisplay; //boot up sequence
+
+//system for displaying messageboxes
 BannerOverlay bannerSystem = new BannerOverlay();
 
-BootDisplay bootDisplay;
-
+//time (local ms) in which the ship died
 long deathTime = 0;
 
 
-
-
+//default display font (hanzelextended)
 PFont font;
 
-//display handling
+//display handling, maps server osc strings to displays defined above. Add new displays to this
 Hashtable<String, Display> displayMap = new Hashtable<String, Display>();
-Display currentScreen;
+Display currentScreen;  //screen that is currently being displayed
 
-/*
-Display[] displayList = new Display[5];
- 
- int[] displayListMap = {2,0,1,2,2,0,3};
- int currentDisplay = 2;*/
-
+//power for something, not sure what
 int systemPower = -1;
 
+//serial stuff
 Serial serialPort;
 String serialBuffer = "";
 String lastSerial = "";
 
 
-//hearbeat stuff
+//hearbeat blinking timer
 long heartBeatTimer = 0;
 
+//time we last got damaged
 int damageTimer = -1000;
-PImage noiseImage;
+PImage noiseImage; //static image that flashes
 
 ShipState shipState = new ShipState();
 
@@ -218,6 +218,7 @@ void draw() {
         }
       }
     }
+    hint(DISABLE_DEPTH_TEST) ;
     bannerSystem.draw();
   }
 
@@ -406,14 +407,21 @@ void oscEvent(OscMessage theOscMessage) {
     bannerSystem.setTitle(title);
     bannerSystem.setText(text);
     bannerSystem.displayFor(duration);
-  } else if (theOscMessage.checkAddrPattern("/system/boot/diskNumbers") ) {
+  } 
+  else if (theOscMessage.checkAddrPattern("/system/boot/diskNumbers") ) {
 
     int[] disks = { 
       theOscMessage.get(0).intValue(), theOscMessage.get(1).intValue(), theOscMessage.get(2).intValue()
-    };
-    println(disks);
+      };
+      println(disks);
     bootDisplay.setDisks(disks);  
-  } else {
+
+  } else if (theOscMessage.checkAddrPattern("/control/grapplingHookState")) {
+
+      weaponsDisplay.hookArmed = theOscMessage.get(0).intValue() == 1 ? true : false;
+      bannerSystem.displayFor(1500);
+    } 
+    else {
       currentScreen.oscMessage(theOscMessage);
     }
   }

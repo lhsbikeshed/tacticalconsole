@@ -46,7 +46,7 @@ public class WeaponsConsole implements Display {
   boolean blinkenBool = false;
   long blinkenBoolTimer  =0;
 
-
+  public boolean hookArmed = false;
 
 
 
