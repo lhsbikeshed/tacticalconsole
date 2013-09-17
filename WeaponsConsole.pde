@@ -15,6 +15,7 @@ public class WeaponsConsole implements Display {
   PImage bgImage;
   PImage scannerImage;
   PImage decoyButton, beamButton, decoyButtonD, beamButtonD;
+  PImage grappleButton, grappleButtonD;
   PImage launchDetected;
 
   PFont font; 
@@ -71,6 +72,9 @@ public class WeaponsConsole implements Display {
     decoyButton = loadImage("firedecoy.png");
     beamButtonD = loadImage("firebeamD.png");
     decoyButtonD = loadImage("firedecoyD.png");
+    
+    grappleButton = loadImage("grappleFireOn.png");
+    grappleButtonD = loadImage("grappleFireOff.png");
   }
 
 
@@ -140,12 +144,19 @@ public class WeaponsConsole implements Display {
 
 
       drawTargets();
-
-      if (blinkenBool && fireEnabled) { 
-        image(beamButton, 790, 412);
-      }
-      if (blinkenBool && flareEnabled) { 
-        image(decoyButton, 790, 480);
+      if(hookArmed){
+        if(blinkenBool){
+          image(grappleButton, 790, 412);
+        } else {
+          image(grappleButtonD, 790, 412);
+        }
+      } else {
+        if (blinkenBool && fireEnabled) { 
+          image(beamButton, 790, 412);
+        }
+        if (blinkenBool && flareEnabled) { 
+          image(decoyButton, 790, 480);
+        }
       }
 
       if (smartBombFireTime + 1000 > millis()) {
@@ -272,25 +283,19 @@ public class WeaponsConsole implements Display {
 
 
     if (action.equals("FIRELASER") ) {
-      // if(currentTarget != null){
-      //  if(currentTarget.pos.mag() < maxBeamRange){
-      OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
-      osc.flush(myMessage, new NetAddress(serverIP, 12000));
+      
+        if(hookArmed){
+           OscMessage myMessage = new OscMessage("/system/targetting/fireGrappling");
+          osc.flush(myMessage, new NetAddress(serverIP, 12000));
+          println("Fire grapple");
+        } else {
+          OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
+          osc.flush(myMessage, new NetAddress(serverIP, 12000));
+          println("Fire at target");
+        }
       return;
-      //  } else {
-      //    println("out of range : " + currentTarget.pos.mag() + " vs " + maxBeamRange);
-      //  }
-      // } else {
-      //   OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
-      //   osc.flush(myMessage, new NetAddress(serverIP, 12000));
-      //}
+      
     }
-
-    /*
-         currentScreen.serialEvent("KEY:GRAPPLEFIRE");
-     } else if (key == 'h'){
-     currentScreen.serialEvent("KEY:GRAPPLERELEASE");
-     */
 
     if (action.equals("GRAPPLEFIRE")) {
       OscMessage myMessage = new OscMessage("/system/targetting/fireGrappling");
@@ -365,17 +370,7 @@ public class WeaponsConsole implements Display {
 
 
   public void oscMessage(OscMessage theOscMessage) {
-    /*if (theOscMessage.checkAddrPattern("/scene/warzone/shipdetected") == true) {
-     //show the hostile ship detected tingy
-     showBanner(0);
-     } 
-     else if (theOscMessage.checkAddrPattern("/scene/warzone/shipcharging") == true) {
-     showBanner(1);
-     } 
-     else if (theOscMessage.checkAddrPattern("/scene/warzone/shipexploding") == true) {
-     showBanner(2);
-     } */
-
+    
 
     if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
       beamPower = theOscMessage.get(3).intValue() + 1;

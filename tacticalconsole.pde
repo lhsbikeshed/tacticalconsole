@@ -94,7 +94,7 @@ void setup() {
   displayMap.put("selfdestruct", new DestructDisplay());
   displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
-  currentScreen = towingDisplay;
+  currentScreen = weaponsDisplay;
 
   bootDisplay = new BootDisplay();
   displayMap.put("boot", bootDisplay);    ///THIS    

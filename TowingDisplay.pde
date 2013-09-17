@@ -92,6 +92,10 @@ public class TowingDisplay implements Display {
      if (action.equals("GRAPPLERELEASE")) {
       OscMessage myMessage = new OscMessage("/system/targetting/releaseGrappling");
       oscP5.flush(myMessage, new NetAddress(serverIP, 12000));
+    } else if (action.equals("FIRELASER") ) {
+      println("Releasing..");
+      OscMessage myMessage = new OscMessage("/system/targetting/releaseGrappling");
+      oscP5.flush(myMessage, new NetAddress(serverIP, 12000));
     }
 
   }
