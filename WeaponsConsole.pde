@@ -126,9 +126,16 @@ public class WeaponsConsole implements Display {
               fill(100, 100, 100);
             }
           }
-          text(t.scanId, 780, ypos);
-          text(t.pos.mag(), 890, ypos);
-
+          text(t.scanId, 710, ypos);
+          String h = String.format("%.0f", t.pos.mag());
+          text(h, 780, ypos);
+          
+          String name = t.name;
+          if(name.length() > 12){
+            name = name.substring(0, 12) + "..";
+          }
+          text(name, 855, ypos);
+          
           if (ypos + 20 > 420) {
             break;
           } 

@@ -29,6 +29,7 @@ public class SignalTracker implements Display {
    :928,574
    */
   public void draw() {
+    
     //signalStrength = map(mouseY, 0, height, 0, 1.0f);
     background(0, 0, 0);
     image(bgImage, 0, 0, width, height);

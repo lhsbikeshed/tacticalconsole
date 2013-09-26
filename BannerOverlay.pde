@@ -38,7 +38,7 @@ public class BannerOverlay {
     visible = false;
   }
   public void draw() {
-
+    noStroke();
     if (visible) {
       if (startDisplayTime + duration < millis()) {
         visible = false;
@@ -89,7 +89,7 @@ public class BannerOverlay {
   private void drawBox() {
 
     pushMatrix();
-
+    
     translate(pos.x, pos.y); 
     image(cornerImg, 0, 0);   //TL
     pushMatrix();
