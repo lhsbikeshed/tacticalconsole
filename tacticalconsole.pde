@@ -215,6 +215,7 @@ void draw() {
           /* sync current display to server */
           OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
           oscP5.send(myMessage, new NetAddress(serverIP, 12000));
+          bannerSystem.cancel();
         }
       }
     }
