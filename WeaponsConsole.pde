@@ -317,7 +317,7 @@ public class WeaponsConsole implements Display {
       if (shipState.smartBombsLeft > 0) {
         if (smartBombFireTime + 1000 < millis()) {
           println("FLARE");
-          OscMessage myMessage = new OscMessage("/scene/warzone/fireFlare");
+          OscMessage myMessage = new OscMessage("/system/targetting/fireFlare");
           osc.flush(myMessage, new NetAddress(serverIP, 12000));
 
           shipState.smartBombsLeft --;

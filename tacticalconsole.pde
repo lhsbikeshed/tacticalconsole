@@ -67,7 +67,7 @@ void setup() {
   if (testMode) {
     serialEnabled = false;
     serverIP = "127.0.0.1";
-    shipState.poweredOn = true;
+    //shipState.poweredOn = true;
   } 
   else {
     serialEnabled = true;
