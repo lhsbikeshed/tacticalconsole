@@ -72,11 +72,12 @@ void setup() {
   else {
     serialEnabled = true;
     serverIP = "10.0.0.100";
+    frame.setLocation(1024,0);
   }
 
   size(1024, 768, P3D);
   frameRate(25);
-  serialPort = new Serial(this, "/dev/ttyUSB9", 9600);
+  serialPort = new Serial(this, "COM3", 9600);
 
   oscP5 = new OscP5(this, 12004);
   dropDisplay = new DropDisplay();
