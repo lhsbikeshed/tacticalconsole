@@ -246,7 +246,8 @@ public class WeaponsConsole implements Display {
           rotate(radians((millis() / 10.0f) % 360));
           noFill();
           stroke(255, 255, 0);
-          rect(-15, -15, 30, 30);
+          float scale = map(t.scanCountDown, 100, 0, 10, 1);
+          rect(-15 * scale, -15* scale, 30 * scale, 30 * scale);
           popMatrix();
 
           text("scanning: " + t.scanCountDown, x + 10, y + 10);
@@ -255,7 +256,7 @@ public class WeaponsConsole implements Display {
         if (t.targetted) {
           stroke(0, 255, 0);
           noFill();
-          rect(x-10, y-10, 20, 20);
+         // rect(x-10, y-10, 20, 20);
 
           if (t.pos.mag() < maxBeamRange) {
             text("FIRE BEAMS", x + 10, y + 10);
@@ -264,6 +265,15 @@ public class WeaponsConsole implements Display {
           else {
             text("OUT OF RANGE", x + 10, y + 10);
           }
+          
+          pushMatrix();
+          translate(x, y);
+          rotate(radians((millis() / 10.0f) % 360));
+          noFill();
+          stroke(255, 255, 0);
+          float scale = map(t.scanCountDown, 100, 0, 10, 1);
+          rect(-15 , -15, 30 , 30 );
+          popMatrix();
         }
 
         if (t.beingFiredAt && firingTime + 400 > millis()) {
