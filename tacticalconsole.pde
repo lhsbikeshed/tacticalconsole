@@ -217,6 +217,7 @@ void draw() {
           OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
           oscP5.send(myMessage, new NetAddress(serverIP, 12000));
           bannerSystem.cancel();
+          println("BOOTED");
         }
       }
     }
@@ -339,6 +340,8 @@ void oscEvent(OscMessage theOscMessage) {
       shipState.poweredOn = true;
       shipState.poweringOn = false;
       bootDisplay.stop();
+      OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
+      oscP5.send(myMessage, new NetAddress(serverIP, 12000));
       if (serialEnabled) {
 
         serialPort.write("P,");
