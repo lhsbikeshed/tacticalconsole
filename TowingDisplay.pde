@@ -16,7 +16,7 @@ public class TowingDisplay implements Display {
 
   public TowingDisplay(OscP5 p, String sIp) {
     font = loadFont("HanzelExtendedNormal-48.vlw");
-    bgImage = loadImage("towingTitle.png");
+    bgImage = loadImage("towingtitle.png");
     shipIcon = loadImage("shipIconSide.png");
     serverIP = sIp;
     oscP5 = p;

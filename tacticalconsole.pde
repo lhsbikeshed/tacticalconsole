@@ -73,11 +73,12 @@ void setup() {
     serialEnabled = true;
     serverIP = "10.0.0.100";
     frame.setLocation(1024,0);
+    serialPort = new Serial(this, "COM3", 9600);
   }
 
   size(1024, 768, P3D);
   frameRate(25);
-  serialPort = new Serial(this, "COM3", 9600);
+  
 
   oscP5 = new OscP5(this, 12004);
   dropDisplay = new DropDisplay();
@@ -85,7 +86,7 @@ void setup() {
   warpDisplay = new WarpDisplay();
   weaponsDisplay = new WeaponsConsole(oscP5, serverIP, this);
   signalTracker = new SignalTracker(oscP5, serverIP);
-  towingDisplay = new TowingDisplay(oscP5, serverIP);
+  //towingDisplay = new TowingDisplay(oscP5, serverIP);
 
 
   displayMap.put("weapons", weaponsDisplay);
@@ -93,7 +94,7 @@ void setup() {
   displayMap.put("hyperspace", warpDisplay);
   displayMap.put("signalTracker", signalTracker);
   displayMap.put("selfdestruct", new DestructDisplay());
-  displayMap.put("towing", towingDisplay);
+ // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
   currentScreen = weaponsDisplay;
 
@@ -174,16 +175,18 @@ void changeDisplay(Display d) {
 
 void draw() {
   noSmooth();
-  while (serialPort.available () > 0) {
-    char val = serialPort.readChar();
-    //println(val);
-    if (val == ',') {
-      //get first char
-      dealWithSerial(serialBuffer);
-      serialBuffer = "";
-    } 
-    else {
-      serialBuffer += val;
+  if(serialEnabled){
+    while (serialPort.available () > 0) {
+      char val = serialPort.readChar();
+      //println(val);
+      if (val == ',') {
+        //get first char
+        dealWithSerial(serialBuffer);
+        serialBuffer = "";
+      } 
+      else {
+        serialBuffer += val;
+      }
     }
   }
 
