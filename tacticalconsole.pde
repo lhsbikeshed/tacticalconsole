@@ -1,3 +1,8 @@
+import ddf.minim.*;
+import ddf.minim.signals.*;
+import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
+
 import processing.serial.*;
 
 import java.awt.Point;
@@ -21,6 +26,10 @@ boolean serialEnabled = false;
 String serverIP = "127.0.0.1";
 
 OscP5 oscP5;
+
+//audio
+Minim minim;
+ConsoleAudio consoleAudio;
 
 DropDisplay dropDisplay; //display for the drop scene
 WarpDisplay warpDisplay; //warp scene
@@ -74,6 +83,7 @@ void setup() {
     serverIP = "10.0.0.100";
     frame.setLocation(1024,0);
     serialPort = new Serial(this, "COM3", 9600);
+
   }
 
   size(1024, 768, P3D);
@@ -108,6 +118,10 @@ void setup() {
     serialPort.write("p,");
   }
   noiseImage = loadImage("noise.png");
+  
+  //audio stuff
+  minim = new Minim(this);
+  consoleAudio = new ConsoleAudio(minim);
 
   /*sync to current game screen*/
   OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
@@ -220,6 +234,7 @@ void draw() {
           OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
           oscP5.send(myMessage, new NetAddress(serverIP, 12000));
           bannerSystem.cancel();
+          println("BOOTED");
         }
       }
     }
@@ -342,6 +357,8 @@ void oscEvent(OscMessage theOscMessage) {
       shipState.poweredOn = true;
       shipState.poweringOn = false;
       bootDisplay.stop();
+      OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
+      oscP5.send(myMessage, new NetAddress(serverIP, 12000));
       if (serialEnabled) {
 
         serialPort.write("P,");
@@ -419,67 +436,72 @@ void oscEvent(OscMessage theOscMessage) {
       theOscMessage.get(0).intValue(), theOscMessage.get(1).intValue(), theOscMessage.get(2).intValue()
       };
       println(disks);
-    bootDisplay.setDisks(disks);  
+    bootDisplay.setDisks(disks);
+  } 
+  else if (theOscMessage.checkAddrPattern("/control/grapplingHookState")) {
 
-  } else if (theOscMessage.checkAddrPattern("/control/grapplingHookState")) {
-
-      weaponsDisplay.hookArmed = theOscMessage.get(0).intValue() == 1 ? true : false;
-      bannerSystem.displayFor(1500);
-    } 
-    else {
-      currentScreen.oscMessage(theOscMessage);
+    weaponsDisplay.hookArmed = theOscMessage.get(0).intValue() == 1 ? true : false;
+    bannerSystem.displayFor(1500);
+  } else if (theOscMessage.checkAddrPattern("/scene/warp/failjump") == true) {
+    currentScreen.oscMessage(theOscMessage);
+    if(serialEnabled){
+      serialPort.write("T,");
+      println("popping panel..");
     }
+  } else {
+    currentScreen.oscMessage(theOscMessage);
   }
+}
 
-  void mouseClicked() {
-    println (":" + mouseX + "," + mouseY);
+void mouseClicked() {
+  println (":" + mouseX + "," + mouseY);
+}
+
+boolean decoyLightState = false;
+void decoyLightState(boolean s) {
+  if (serialEnabled == false) { 
+    return;
+  };
+  if (s && decoyLightState == false) {
+    // println("poo");
+    decoyLightState = true;
+    serialPort.write("D,");
+  } 
+  else if (!s && decoyLightState == true) {
+    serialPort.write("d,");
+    decoyLightState = false;
   }
+}
 
-  boolean decoyLightState = false;
-  void decoyLightState(boolean s) {
-    if (serialEnabled == false) { 
-      return;
-    };
-    if (s && decoyLightState == false) {
-      // println("poo");
-      decoyLightState = true;
-      serialPort.write("D,");
-    } 
-    else if (!s && decoyLightState == true) {
-      serialPort.write("d,");
-      decoyLightState = false;
-    }
+
+public class ShipState {
+
+  public int smartBombsLeft = 6;
+  public boolean poweredOn = false;
+  public boolean poweringOn = false ;
+  public boolean areWeDead = false;
+  public String deathText = "";
+
+  public PVector shipPos = new PVector(0, 0, 0);
+  public PVector shipRot = new PVector(0, 0, 0);
+  public PVector shipVel = new PVector(0, 0, 0);
+
+
+  public ShipState() {
+  };
+
+  public void resetState() {
   }
+}
 
 
-  public class ShipState {
+/* change this scene to show the altitude and predicted death time*/
+public interface Display {
 
-    public int smartBombsLeft = 6;
-    public boolean poweredOn = false;
-    public boolean poweringOn = false ;
-    public boolean areWeDead = false;
-    public String deathText = "";
-
-    public PVector shipPos = new PVector(0, 0, 0);
-    public PVector shipRot = new PVector(0, 0, 0);
-    public PVector shipVel = new PVector(0, 0, 0);
-
-
-    public ShipState() {
-    };
-
-    public void resetState() {
-    }
-  }
-
-
-  /* change this scene to show the altitude and predicted death time*/
-  public interface Display {
-
-    public void draw();
-    public void oscMessage(OscMessage theOscMessage);
-    public void start();
-    public void stop();
-    public void serialEvent(String content);
-  }
+  public void draw();
+  public void oscMessage(OscMessage theOscMessage);
+  public void start();
+  public void stop();
+  public void serialEvent(String content);
+}
 

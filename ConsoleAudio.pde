@@ -21,7 +21,7 @@ public class ConsoleAudio {
         println("loading: " + parts[1]);
         AudioSample s = minim.loadSample("audio/" + parts[1], 512);
         //move to left channel
-        s.setBalance(-1.0f);
+        s.setBalance(1.0f);
         audioList.put(parts[0], s);
       }
 
@@ -31,7 +31,7 @@ public class ConsoleAudio {
   public void playClip(String name) {
     AudioSample c = audioList.get(name);
     if(c != null){
-      c.setBalance(-1.0f);
+      c.setBalance(1.0f);
       c.trigger();
     } else {
       println("ALERT: tried to play " + name + " but not found");

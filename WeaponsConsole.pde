@@ -72,7 +72,7 @@ public class WeaponsConsole implements Display {
     decoyButton = loadImage("firedecoy.png");
     beamButtonD = loadImage("firebeamD.png");
     decoyButtonD = loadImage("firedecoyD.png");
-    
+
     grappleButton = loadImage("grappleFireOn.png");
     grappleButtonD = loadImage("grappleFireOff.png");
   }
@@ -129,13 +129,13 @@ public class WeaponsConsole implements Display {
           text(t.scanId, 710, ypos);
           String h = String.format("%.0f", t.pos.mag());
           text(h, 780, ypos);
-          
+
           String name = t.name;
-          if(name.length() > 12){
+          if (name.length() > 12) {
             name = name.substring(0, 12) + "..";
           }
           text(name, 855, ypos);
-          
+
           if (ypos + 20 > 420) {
             break;
           } 
@@ -151,13 +151,15 @@ public class WeaponsConsole implements Display {
 
 
       drawTargets();
-      if(hookArmed){
-        if(blinkenBool){
+      if (hookArmed) {
+        if (blinkenBool) {
           image(grappleButton, 790, 412);
-        } else {
+        } 
+        else {
           image(grappleButtonD, 790, 412);
         }
-      } else {
+      } 
+      else {
         if (blinkenBool && fireEnabled) { 
           image(beamButton, 790, 412);
         }
@@ -240,6 +242,8 @@ public class WeaponsConsole implements Display {
             myMessage.add(t.hashCode);
             osc.flush(myMessage, new NetAddress(serverIP, 12000));
             currentTarget = t;
+            consoleAudio.playClip("targetLocked");
+
           }
           pushMatrix();
           translate(x, y);
@@ -256,7 +260,7 @@ public class WeaponsConsole implements Display {
         if (t.targetted) {
           stroke(0, 255, 0);
           noFill();
-         // rect(x-10, y-10, 20, 20);
+          // rect(x-10, y-10, 20, 20);
 
           if (t.pos.mag() < maxBeamRange) {
             text("FIRE BEAMS", x + 10, y + 10);
@@ -265,14 +269,14 @@ public class WeaponsConsole implements Display {
           else {
             text("OUT OF RANGE", x + 10, y + 10);
           }
-          
+
           pushMatrix();
           translate(x, y);
           rotate(radians((millis() / 10.0f) % 360));
           noFill();
           stroke(255, 255, 0);
           float scale = map(t.scanCountDown, 100, 0, 10, 1);
-          rect(-15 , -15, 30 , 30 );
+          rect(-15, -15, 30, 30 );
           popMatrix();
         }
 
@@ -300,18 +304,24 @@ public class WeaponsConsole implements Display {
 
 
     if (action.equals("FIRELASER") ) {
-      
-        if(hookArmed){
-           OscMessage myMessage = new OscMessage("/system/targetting/fireGrappling");
-          osc.flush(myMessage, new NetAddress(serverIP, 12000));
-          println("Fire grapple");
+
+      if (hookArmed) {
+        OscMessage myMessage = new OscMessage("/system/targetting/fireGrappling");
+        osc.flush(myMessage, new NetAddress(serverIP, 12000));
+        println("Fire grapple");
+      } 
+      else {
+        OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
+        osc.flush(myMessage, new NetAddress(serverIP, 12000));
+        if (currentTarget != null && currentTarget.pos.mag() < maxBeamRange) {
+            consoleAudio.playClip("firing");
         } else {
-          OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
-          osc.flush(myMessage, new NetAddress(serverIP, 12000));
-          println("Fire at target");
+            consoleAudio.playClip("outOfRange");
         }
+
+        println("Fire at target");
+      }
       return;
-      
     }
 
     if (action.equals("GRAPPLEFIRE")) {
@@ -344,6 +354,7 @@ public class WeaponsConsole implements Display {
       if (action.equals("SCAN")) {
         currentTarget = null;
         println("scan");
+        consoleAudio.playClip("targetting");
         int sId = 0;
         try {
           sId = Integer.parseInt(scanString);
@@ -387,7 +398,7 @@ public class WeaponsConsole implements Display {
 
 
   public void oscMessage(OscMessage theOscMessage) {
-    
+
 
     if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
       beamPower = theOscMessage.get(3).intValue() + 1;
@@ -407,6 +418,7 @@ public class WeaponsConsole implements Display {
           t.hashCode = tgtHash;
           newTarget = true;
           targets.add(t);
+          consoleAudio.playClip("newTarget");
         }
         t.scanId = theOscMessage.get(1).intValue();
         t.trackingPlayer = theOscMessage.get(2).intValue() == 1 ? true : false;
