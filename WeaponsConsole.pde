@@ -187,7 +187,11 @@ public class WeaponsConsole implements Display {
       for (int i = targets.size() - 1; i >= 0; i--) {
         TargetObject t = targets.get(i);
         //update logic bits
+        //if no update received for 280ms then remove this target
         if (millis() - t.lastUpdateTime > 280) {
+          if(t.targetted){
+            consoleAudio.playClip("targetDestroyed");
+          }
           targets.remove(i);
         }
 
@@ -243,7 +247,6 @@ public class WeaponsConsole implements Display {
             osc.flush(myMessage, new NetAddress(serverIP, 12000));
             currentTarget = t;
             consoleAudio.playClip("targetLocked");
-
           }
           pushMatrix();
           translate(x, y);
@@ -314,9 +317,10 @@ public class WeaponsConsole implements Display {
         OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
         osc.flush(myMessage, new NetAddress(serverIP, 12000));
         if (currentTarget != null && currentTarget.pos.mag() < maxBeamRange) {
-            consoleAudio.playClip("firing");
-        } else {
-            consoleAudio.playClip("outOfRange");
+          consoleAudio.playClip("firing");
+        } 
+        else {
+          consoleAudio.playClip("outOfRange");
         }
 
         println("Fire at target");
@@ -354,15 +358,17 @@ public class WeaponsConsole implements Display {
       if (action.equals("SCAN")) {
         currentTarget = null;
         println("scan");
-        consoleAudio.playClip("targetting");
+
         int sId = 0;
         try {
           sId = Integer.parseInt(scanString);
           //find what were scanning
+          boolean targetFound = false;
           synchronized(targets) {
             for (TargetObject t : targets) {
               if (sId == t.scanId) {
                 t.scanCountDown = (5 - sensorPower) * 21;
+                targetFound = true;
               } 
               else {
                 if (t.targetted) {
@@ -374,6 +380,13 @@ public class WeaponsConsole implements Display {
                   osc.flush(myMessage, new NetAddress(serverIP, 12000));
                 }
               }
+            }
+
+            if (targetFound) {
+              consoleAudio.playClip("targetting");
+            } 
+            else {
+              consoleAudio.playClip("outOfRange");
             }
           }
         } 
@@ -453,6 +466,10 @@ public class WeaponsConsole implements Display {
         if (t != null) {
           t.dead = true;
           t.targetted = false;
+          println("target remove");
+          if(t.targetted){
+            consoleAudio.playClip("targetDestroyed");
+          }
         }
       }
     } 
