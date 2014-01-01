@@ -30,6 +30,9 @@ public class ConsoleAudio {
   }
 
   public void playClip(String name) {
+    if(!shipState.poweredOn){
+      return;
+    }
     AudioPlayer c = audioList.get(name);
     if(c != null){
       c.setPan(1.0f);

@@ -23,7 +23,7 @@ public class BannerOverlay {
 
   String pathBase = "C:/Users/tom/Dropbox/starship/tacticalconsole/data/";  
   //String pathBase = "C:/Users/tom/Documents/sketch/bannertest/data/";
- // String pathBase = "c:/game/dev/tacticalconsole/data/";    //LIVE
+  // String pathBase = "c:/game/dev/tacticalconsole/data/";    //LIVE
 
 
 
@@ -151,6 +151,7 @@ public class BannerOverlay {
       startDisplayTime = millis();
       visible = true;
       duration = time;
+      consoleAudio.playClip("bannerPopup");
     }
   }
 
