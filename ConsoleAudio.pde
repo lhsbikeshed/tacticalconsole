@@ -4,6 +4,9 @@ public class ConsoleAudio {
 
   Minim minim;
   Hashtable<String, AudioPlayer> audioList;
+  
+
+  AudioPlayer[] beepList = new AudioPlayer[4];
 
   public ConsoleAudio(Minim minim) {
     this.minim = minim;
@@ -27,7 +30,25 @@ public class ConsoleAudio {
       }
 
     }
+    for(int i = 0; i < beepList.length; i++){
+      
+      beepList[i] = minim.loadFile("audio/buttonBeep" + i + ".wav");
+      beepList[i].setPan(1.0f);
+    }
   }
+
+  public void randomBeep(){
+    if(!shipState.poweredOn){
+      return;
+    }
+    int rand = floor(random(beepList.length));
+    while(beepList[rand].isPlaying()){
+      rand = floor(random(beepList.length));
+    }
+    beepList[rand].rewind();
+    beepList[rand].play();
+  }
+      
 
   public void playClip(String name) {
     if(!shipState.poweredOn){

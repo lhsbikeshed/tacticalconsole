@@ -128,8 +128,10 @@ void setup() {
   oscP5.send(myMessage, new NetAddress(serverIP, 12000));
 }
 
+/* these are just for testing when serial devices arent available */
 void keyPressed() {
   if (key >= '0' && key <= '9') {
+    consoleAudio.randomBeep();
     currentScreen.serialEvent("KEY:" + key);
   } 
   else if ( key == ' ') {
@@ -149,12 +151,22 @@ void keyPressed() {
   }
 }
 
+/* expected vals:
+ * 0-9 from keypad
+ * ' ' = scan key
+ * 'F' = any of the beam bank buttons
+ * 'm' = decoy button
+ * 'X' = conduit puzzle failed
+ * 'P' = conduit puzzle complete
+ * 'CX' = cable X connected correctly
+ */
 void dealWithSerial(String vals) {
   // println(vals);
 
   char c = vals.charAt(0);
   if (c >= '0' && c <= '9') {
     String v = "KEY:" + c;
+    consoleAudio.randomBeep();
     currentScreen.serialEvent(v);
   }
   if (c == ' ') {
