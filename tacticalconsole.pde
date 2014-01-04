@@ -15,7 +15,7 @@ import java.util.Hashtable;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = true;
+boolean testMode = false;
 
 
 
@@ -72,7 +72,12 @@ PImage noiseImage; //static image that flashes
 ShipState shipState = new ShipState();
 
 void setup() {
+  size(1024, 768, P3D);
+  frameRate(25);
 
+
+
+  shipState.poweredOn = true;
   if (testMode) {
     serialEnabled = false;
     serverIP = "127.0.0.1";
@@ -81,14 +86,12 @@ void setup() {
   else {
     serialEnabled = true;
     serverIP = "10.0.0.100";
-    frame.setLocation(1024,0);
+    frame.setLocation(1024, 0);
     serialPort = new Serial(this, "COM3", 9600);
-
   }
 
-  size(1024, 768, P3D);
-  frameRate(25);
-  
+
+
 
   oscP5 = new OscP5(this, 12004);
   dropDisplay = new DropDisplay();
@@ -104,7 +107,7 @@ void setup() {
   displayMap.put("hyperspace", warpDisplay);
   displayMap.put("signalTracker", signalTracker);
   displayMap.put("selfdestruct", new DestructDisplay());
- // displayMap.put("towing", towingDisplay);
+  // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
   currentScreen = weaponsDisplay;
 
@@ -118,7 +121,7 @@ void setup() {
     serialPort.write("p,");
   }
   noiseImage = loadImage("noise.png");
-  
+
   //audio stuff
   minim = new Minim(this);
   consoleAudio = new ConsoleAudio(minim);
@@ -201,7 +204,7 @@ void changeDisplay(Display d) {
 
 void draw() {
   noSmooth();
-  if(serialEnabled){
+  if (serialEnabled) {
     while (serialPort.available () > 0) {
       char val = serialPort.readChar();
       //println(val);
@@ -454,13 +457,15 @@ void oscEvent(OscMessage theOscMessage) {
 
     weaponsDisplay.hookArmed = theOscMessage.get(0).intValue() == 1 ? true : false;
     bannerSystem.displayFor(1500);
-  } else if (theOscMessage.checkAddrPattern("/scene/warp/failjump") == true) {
+  } 
+  else if (theOscMessage.checkAddrPattern("/scene/warp/failjump") == true) {
     currentScreen.oscMessage(theOscMessage);
-    if(serialEnabled){
+    if (serialEnabled) {
       serialPort.write("T,");
       println("popping panel..");
     }
-  } else {
+  } 
+  else {
     currentScreen.oscMessage(theOscMessage);
   }
 }
