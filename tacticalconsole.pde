@@ -15,7 +15,7 @@ import java.util.Hashtable;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = false;
+boolean testMode = true;
 
 
 
@@ -32,7 +32,7 @@ Minim minim;
 ConsoleAudio consoleAudio;
 
 DropDisplay dropDisplay; //display for the drop scene
-WarpDisplay warpDisplay; //warp scene
+WarpDisplay2 warpDisplay; //warp scene
 WeaponsConsole weaponsDisplay;  //tactical weapons display
 SignalTracker signalTracker;    //signal tracker for nebula scene
 TowingDisplay towingDisplay;    //grappling hook display
@@ -96,7 +96,7 @@ void setup() {
   oscP5 = new OscP5(this, 12004);
   dropDisplay = new DropDisplay();
   //radarDisplay = new RadarDisplay();
-  warpDisplay = new WarpDisplay();
+  warpDisplay = new WarpDisplay2();
   weaponsDisplay = new WeaponsConsole(oscP5, serverIP, this);
   signalTracker = new SignalTracker(oscP5, serverIP);
   //towingDisplay = new TowingDisplay(oscP5, serverIP);
@@ -109,7 +109,7 @@ void setup() {
   displayMap.put("selfdestruct", new DestructDisplay());
   // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
-  currentScreen = weaponsDisplay;
+  currentScreen = warpDisplay;
 
   bootDisplay = new BootDisplay();
   displayMap.put("boot", bootDisplay);    ///THIS    
