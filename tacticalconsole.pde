@@ -69,6 +69,12 @@ long heartBeatTimer = 0;
 int damageTimer = -1000;
 PImage noiseImage; //static image that flashes
 
+
+//global var for blinking things, this toggles true/false every 750ms
+boolean globalBlinker = false;
+long blinkTime = 0;
+
+
 ShipState shipState = new ShipState();
 
 void setup() {
@@ -109,7 +115,7 @@ void setup() {
   displayMap.put("selfdestruct", new DestructDisplay());
   // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
-  currentScreen = warpDisplay;
+  currentScreen = dropDisplay;
 
   bootDisplay = new BootDisplay();
   displayMap.put("boot", bootDisplay);    ///THIS    
@@ -203,6 +209,10 @@ void changeDisplay(Display d) {
 
 
 void draw() {
+  if(blinkTime + 750 < millis()){
+    blinkTime = millis();
+    globalBlinker = ! globalBlinker;
+  }
   noSmooth();
   if (serialEnabled) {
     while (serialPort.available () > 0) {
