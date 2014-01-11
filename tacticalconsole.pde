@@ -15,7 +15,7 @@ import java.util.Hashtable;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = true;
+boolean testMode = false;
 
 
 
@@ -257,6 +257,7 @@ void draw() {
           shipState.poweringOn = false;
           /* sync current display to server */
           OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
+          oscP5.send(myMessage, new NetAddress(serverIP, 12000));
           oscP5.send(myMessage, new NetAddress(serverIP, 12000));
           bannerSystem.cancel();
           println("BOOTED");
