@@ -10,6 +10,8 @@ import oscP5.*;
 import netP5.*;
 
 import java.util.Hashtable;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 
 
 //CHANGE ME for testing
@@ -80,6 +82,7 @@ ShipState shipState = new ShipState();
 void setup() {
   size(1024, 768, P3D);
   frameRate(25);
+  hideCursor();
 
 
 
@@ -520,6 +523,13 @@ public class ShipState {
 
   public void resetState() {
   }
+}
+
+void hideCursor(){
+  BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+  Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+  cursorImg, new Point(0, 0), "blank cursor");
+  frame.setCursor(blankCursor);
 }
 
 
