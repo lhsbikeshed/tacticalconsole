@@ -188,7 +188,7 @@ public class WeaponsConsole implements Display {
         TargetObject t = targets.get(i);
         //update logic bits
         //if no update received for 280ms then remove this target
-        if (millis() - t.lastUpdateTime > 280) {
+        if (millis() - t.lastUpdateTime > 300) {
           if(t.targetted){
             consoleAudio.playClip("targetDestroyed");
           }

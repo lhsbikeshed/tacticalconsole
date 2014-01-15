@@ -209,7 +209,7 @@ void changeDisplay(Display d) {
 
 
 void draw() {
-  if(blinkTime + 750 < millis()){
+  if (blinkTime + 750 < millis()) {
     blinkTime = millis();
     globalBlinker = ! globalBlinker;
   }
@@ -409,6 +409,13 @@ void oscEvent(OscMessage theOscMessage) {
 
       serialPort.write("S,");
     }
+    float damage = theOscMessage.get(0).floatValue();
+    if (damage > 8.0 && random(100) < 10) {
+      if (serialEnabled) {
+        serialPort.write("T,");
+        println("popping panel..");
+      }
+    }
   } 
   else if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
     int beamPower = theOscMessage.get(3).intValue() - 1;  //write charge rate
@@ -468,14 +475,7 @@ void oscEvent(OscMessage theOscMessage) {
 
     weaponsDisplay.hookArmed = theOscMessage.get(0).intValue() == 1 ? true : false;
     bannerSystem.displayFor(1500);
-  } 
-  else if (theOscMessage.checkAddrPattern("/scene/warp/failjump") == true) {
-    currentScreen.oscMessage(theOscMessage);
-    if (serialEnabled) {
-      serialPort.write("T,");
-      println("popping panel..");
-    }
-  } 
+  }
   else {
     currentScreen.oscMessage(theOscMessage);
   }
