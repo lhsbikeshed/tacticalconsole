@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = false;
+boolean testMode = true;
 
 
 
@@ -82,7 +82,6 @@ ShipState shipState = new ShipState();
 void setup() {
   size(1024, 768, P3D);
   frameRate(25);
-  hideCursor();
 
 
 
@@ -97,6 +96,7 @@ void setup() {
     serverIP = "10.0.0.100";
     frame.setLocation(1024, 0);
     serialPort = new Serial(this, "COM3", 9600);
+    hideCursor();
   }
 
 
@@ -118,7 +118,7 @@ void setup() {
   displayMap.put("selfdestruct", new DestructDisplay());
   // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
-  currentScreen = dropDisplay;
+  currentScreen = weaponsDisplay;
 
   bootDisplay = new BootDisplay();
   displayMap.put("boot", bootDisplay);    ///THIS    
@@ -525,7 +525,7 @@ public class ShipState {
   }
 }
 
-void hideCursor(){
+void hideCursor() {
   BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
   Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
   cursorImg, new Point(0, 0), "blank cursor");

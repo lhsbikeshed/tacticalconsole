@@ -48,6 +48,9 @@ public class WeaponsConsole implements Display {
   long blinkenBoolTimer  =0;
 
   public boolean hookArmed = false;
+  
+  //sensor power to range mapping
+  int[] sensorRanges = { 0, 600, 900, 1400 };
 
 
 
@@ -104,6 +107,8 @@ public class WeaponsConsole implements Display {
       text("OFFLINE", 250, 420);
     } 
     else {
+      
+      //draw sidebar stuff
       fill(255, 255, 0);
       textFont(font, 12);
       text("Smartbombs:" + shipState.smartBombsLeft, 776, 44);
@@ -111,6 +116,7 @@ public class WeaponsConsole implements Display {
       text("Sensor Power:" + (sensorPower * 25) + "%", 776, 84);
 
       text("Max Beam Range: " + maxBeamRange, 780, 500);
+      text("Sensor range: " + sensorRanges[sensorPower - 1], 780, 520);
       synchronized(targets) {
         Collections.sort(targets);  //sorted by distance from ship
         int ypos = 260;
@@ -119,7 +125,7 @@ public class WeaponsConsole implements Display {
             fill(255, 0, 0);
           }
           else {
-            if (t.pos.mag() < maxBeamRange) {
+            if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
               fill(0, 255, 0);
             } 
             else {
@@ -133,6 +139,9 @@ public class WeaponsConsole implements Display {
           String name = t.name;
           if (name.length() > 12) {
             name = name.substring(0, 12) + "..";
+          }
+          if(t.pos.mag() > sensorRanges[sensorPower - 1]){
+            name = "???";
           }
           text(name, 855, ypos);
 
@@ -149,7 +158,10 @@ public class WeaponsConsole implements Display {
       text(scanString, 800, 190);
 
 
-
+      fill(0,128,0,100);
+      int sensorSize = sensorRanges[sensorPower - 1];
+      ellipse(353 , 422, sensorSize / 2, sensorSize / 2);
+      
       drawTargets();
       if (hookArmed) {
         if (blinkenBool) {
@@ -202,7 +214,11 @@ public class WeaponsConsole implements Display {
 
         float x = 352 + map(lerpX, -2000, 2000, -352, 352);
         float y = 426 + map(lerpY, -2000, 2000, -426, 426);
-        if (t.pos.mag() < 200) {
+        
+        //set target colour
+        if(t.pos.mag() > sensorRanges[sensorPower - 1]){
+          fill(100,100,100);
+        } else if (t.pos.mag() < 200) {
 
           fill(255, 0, 0);
         } 
@@ -220,15 +236,20 @@ public class WeaponsConsole implements Display {
         if (t.scanId < 1000) {
           scanCode = "0" + scanCode;
         }
-        textFont(font, 12);
-        if (sensorPower >= 3) {
-          String h = String.format("%.2f", t.stats[0] * 100);
-          text(t.name +": " + h + "%", x + 10, y + 30);
-        } 
-        else {
-          text(t.name + ": ???%", x + 10, y +30);
+        if(t.pos.mag() < sensorRanges[sensorPower - 1]){
+          textFont(font, 12);
+          if (sensorPower >= 3) {
+            String h = String.format("%.2f", t.stats[0] * 100);
+            text(t.name +": " + h + "%", x + 10, y + 30);
+          } 
+          else {
+            text(t.name + ": ???%", x + 10, y +30);
+          }
+          text(scanCode, x + 10, y);
+        } else {
+          fill(128);
+          text("???", x + 10, y);
         }
-        text(scanCode, x + 10, y);
 
         if (t.dead) {
           targets.remove(i);
