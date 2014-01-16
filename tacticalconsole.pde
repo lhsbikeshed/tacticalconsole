@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = true;
+boolean testMode = false;
 
 
 
@@ -413,7 +413,7 @@ void oscEvent(OscMessage theOscMessage) {
       serialPort.write("S,");
     }
     float damage = theOscMessage.get(0).floatValue();
-    if (damage > 8.0 && random(100) < 10) {
+    if (damage > 8.0 && random(100) < 25) {
       if (serialEnabled) {
         serialPort.write("T,");
         println("popping panel..");

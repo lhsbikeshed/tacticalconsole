@@ -132,7 +132,12 @@ public class WeaponsConsole implements Display {
               fill(100, 100, 100);
             }
           }
-          text(t.scanId, 710, ypos);
+          if(t.pos.mag() > sensorRanges[sensorPower - 1]){
+            text("???", 710, ypos);
+          } else {
+            text(t.scanId, 710, ypos);
+            
+          }
           String h = String.format("%.0f", t.pos.mag());
           text(h, 780, ypos);
 
