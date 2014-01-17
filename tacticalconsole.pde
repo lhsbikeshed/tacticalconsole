@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = false;
+boolean testMode = false;;
 
 
 
@@ -47,6 +47,8 @@ BannerOverlay bannerSystem = new BannerOverlay();
 //time (local ms) in which the ship died
 long deathTime = 0;
 
+//is the decoy blinker on?
+boolean decoyBlinker = false;
 
 //default display font (hanzelextended)
 PFont font;
@@ -60,6 +62,7 @@ int systemPower = -1;
 
 //serial stuff
 Serial serialPort;
+Serial charlesPort;
 String serialBuffer = "";
 String lastSerial = "";
 
@@ -96,6 +99,7 @@ void setup() {
     serverIP = "10.0.0.100";
     frame.setLocation(1024, 0);
     serialPort = new Serial(this, "COM3", 9600);
+    charlesPort = new Serial(this, "COM5", 9600);
     hideCursor();
   }
 
@@ -288,6 +292,22 @@ void draw() {
   }
 }
 
+void setDecoyBlinkerState(boolean state){
+  if(!serialEnabled){
+    return;
+  }
+  if(state != decoyBlinker){
+    if(state){
+      decoyBlinker = true;
+      serialPort.write("D,");
+    } else {
+        decoyBlinker = false;
+        serialPort.write("d,");
+    }
+  }
+}
+    
+
 void oscEvent(OscMessage theOscMessage) {
   // println(theOscMessage);
   if (theOscMessage.checkAddrPattern("/scene/change")==true) {
@@ -315,6 +335,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("p,");
+        decoyBlinker = false;
       }
     }
 
@@ -341,6 +362,8 @@ void oscEvent(OscMessage theOscMessage) {
       bannerSystem.cancel();
       if (serialEnabled) {
         serialPort.write("p,");
+        decoyBlinker = false;
+        charlesPort.write("R0,");
       }
     } 
     else {
@@ -352,6 +375,7 @@ void oscEvent(OscMessage theOscMessage) {
         changeDisplay(bootDisplay);
         if (serialEnabled) {
           serialPort.write("P,");
+          charlesPort.write("R1,");
         }
       }
     }
@@ -363,6 +387,7 @@ void oscEvent(OscMessage theOscMessage) {
     shipState.deathText = theOscMessage.get(0).stringValue();
     if (serialEnabled) {
       serialPort.write("p,");
+      charlesPort.write("R0,");
     }
   } 
   else if (theOscMessage.checkAddrPattern("/game/reset") == true) {
@@ -391,6 +416,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("P,");
+        charlesPort.write("R1,");
       }
     } 
     else {
@@ -399,6 +425,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("p,");
+        charlesPort.write("R0,");
       }
     }
   }
@@ -411,6 +438,7 @@ void oscEvent(OscMessage theOscMessage) {
     if (serialEnabled) {
 
       serialPort.write("S,");
+      charlesPort.write("D1,");
     }
     float damage = theOscMessage.get(0).floatValue();
     if (damage > 8.0 && random(100) < 25) {
@@ -422,9 +450,17 @@ void oscEvent(OscMessage theOscMessage) {
   } 
   else if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
     int beamPower = theOscMessage.get(3).intValue() - 1;  //write charge rate
+    int propPower = theOscMessage.get(0).intValue() - 1;
+    int sensorPower = theOscMessage.get(2).intValue() - 1;
+    int internalPower = theOscMessage.get(1).intValue() - 1;
+    
     println(beamPower);
     if (serialEnabled) {
-      serialPort.write("L" + beamPower + ",");
+      serialPort.write("L" +  beamPower + ",");
+      charlesPort.write("P" + (propPower + 1));
+      charlesPort.write("W" + (beamPower + 1));
+      charlesPort.write("S" + (sensorPower + 1));
+      charlesPort.write("I" + (internalPower + 1));
     }
     currentScreen.oscMessage(theOscMessage);
   } 
