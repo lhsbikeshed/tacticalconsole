@@ -37,6 +37,8 @@ public class DropDisplay implements Display {
     fixed = false;
     structFail = false;
     jumpCharged = false;
+    //probe for current cable state
+    probeCableState();
   }
 
   public void stop() {
@@ -52,16 +54,17 @@ public class DropDisplay implements Display {
       line(462, 280, 585, 280);
       textFont(font, 30);
       fill(0, 255, 0);
-      if(jumpCharged){
-        
+      if (jumpCharged) {
+
         text("JUMP SYSTEM CHARGING", 10, 148);
         textFont(font, 20);
-        
+
         text("CHARGING", 61, 440);
-      } else {
+      } 
+      else {
         text("JUMP SYSTEM READY", 10, 148);
         textFont(font, 20);
-        
+
         text("READY", 61, 440);
       }
     } 
@@ -90,7 +93,8 @@ public class DropDisplay implements Display {
     //   println(theOscMessage);
     if (theOscMessage.checkAddrPattern("/scene/drop/structuralFailure")==true) {
       structFail = true;
-    } else if (theOscMessage.checkAddrPattern("/ship/jumpStatus") == true) {
+    } 
+    else if (theOscMessage.checkAddrPattern("/ship/jumpStatus") == true) {
       int v = theOscMessage.get(0).intValue();
       if (v == 0) {
         jumpCharged = false;
@@ -98,33 +102,31 @@ public class DropDisplay implements Display {
       else if (v == 1) {
         jumpCharged = true;
       }
-    } 
+    }
   }
 
   public void serialEvent(String evt) {
     String[] evtData = evt.split(":");
     println(evt);
-    if (evtData[0].equals("CONDUIT")) {
+    if (evtData[0].equals("CONDUITCONNECT")) {
 
       char c = evtData[1].charAt(0);
       if (c >= '0' && c < '9') {
-        OscMessage myMessage = new OscMessage("/scene/drop/conduit");
+        OscMessage myMessage = new OscMessage("/scene/drop/conduitConnect");
         myMessage.add(Integer.parseInt(evtData[1]));
         OscP5.flush(myMessage, new NetAddress(serverIP, 12000));
-      } 
-      else if (c == 'P') {
-        OscMessage myMessage = new OscMessage("/scene/drop/droppanelrepaired");
-        myMessage.add(1);
-        OscP5.flush(myMessage, new NetAddress(serverIP, 12000));
-        fixed = true;
-      } 
-      else if (c =='X') {
-        OscMessage myMessage = new OscMessage("/scene/drop/conduitFail");
-
-        OscP5.flush(myMessage, new NetAddress(serverIP, 12000));
-        fixed = false;
       }
-    }
+    } 
+    else if (evtData[0].equals("CONDUITDISCONNECT")) {
+
+      char c = evtData[1].charAt(0);
+      if (c >= '0' && c < '9') {
+        OscMessage myMessage = new OscMessage("/scene/drop/conduitDisconnect");
+        myMessage.add(Integer.parseInt(evtData[1]));
+        OscP5.flush(myMessage, new NetAddress(serverIP, 12000));
+      }
+    } 
+   
   }
 }
 

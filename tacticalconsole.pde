@@ -63,6 +63,8 @@ int systemPower = -1;
 //serial stuff
 Serial serialPort;
 Serial charlesPort;
+
+
 String serialBuffer = "";
 String lastSerial = "";
 
@@ -99,11 +101,11 @@ void setup() {
     serverIP = "10.0.0.100";
     frame.setLocation(1024, 0);
     serialPort = new Serial(this, "COM3", 9600);
-    charlesPort = new Serial(this, "COM5", 9600);
+    //charlesPort = new Serial(this, "COM5", 9600);
     hideCursor();
   }
-
-
+//REMOVEME
+serverIP = "127.0.0.1";
 
 
   oscP5 = new OscP5(this, 12004);
@@ -195,15 +197,21 @@ void dealWithSerial(String vals) {
     currentScreen.serialEvent("KEY:DECOY");
   }
 
-  if (c == 'X') {
-    currentScreen.serialEvent("CONDUIT:X");
-  } 
-  if (c == 'P') {
-    currentScreen.serialEvent("CONDUIT:P");
-  }
   if (c == 'C') {
 
-    currentScreen.serialEvent("CONDUIT:" + vals.charAt(1));
+    currentScreen.serialEvent("CONDUITCONNECT:" + vals.charAt(1));
+  }
+  if (c == 'c') {
+
+    currentScreen.serialEvent("CONDUITDISCONNECT:" + vals.charAt(1));
+  }
+}
+
+void probeCableState(){
+  if(serialEnabled){
+    serialPort.write("C,");
+  } else {
+    println("probed cable puzzle state");
   }
 }
 
@@ -363,7 +371,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
         serialPort.write("p,");
         decoyBlinker = false;
-        charlesPort.write("R0,");
+        //charlesPort.write("R0,");
       }
     } 
     else {
@@ -375,7 +383,7 @@ void oscEvent(OscMessage theOscMessage) {
         changeDisplay(bootDisplay);
         if (serialEnabled) {
           serialPort.write("P,");
-          charlesPort.write("R1,");
+          //charlesPort.write("R1,");
         }
       }
     }
@@ -387,7 +395,7 @@ void oscEvent(OscMessage theOscMessage) {
     shipState.deathText = theOscMessage.get(0).stringValue();
     if (serialEnabled) {
       serialPort.write("p,");
-      charlesPort.write("R0,");
+      //charlesPort.write("R0,");
     }
   } 
   else if (theOscMessage.checkAddrPattern("/game/reset") == true) {
@@ -416,7 +424,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("P,");
-        charlesPort.write("R1,");
+        //charlesPort.write("R1,");
       }
     } 
     else {
@@ -425,7 +433,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("p,");
-        charlesPort.write("R0,");
+        //charlesPort.write("R0,");
       }
     }
   }
@@ -438,7 +446,7 @@ void oscEvent(OscMessage theOscMessage) {
     if (serialEnabled) {
 
       serialPort.write("S,");
-      charlesPort.write("D1,");
+      //charlesPort.write("D1,");
     }
     float damage = theOscMessage.get(0).floatValue();
     if (damage > 8.0 && random(100) < 25) {
@@ -457,10 +465,10 @@ void oscEvent(OscMessage theOscMessage) {
     println(beamPower);
     if (serialEnabled) {
       serialPort.write("L" +  beamPower + ",");
-      charlesPort.write("P" + (propPower + 1));
-      charlesPort.write("W" + (beamPower + 1));
-      charlesPort.write("S" + (sensorPower + 1));
-      charlesPort.write("I" + (internalPower + 1));
+      //charlesPort.write("P" + (propPower + 1));
+      //charlesPort.write("W" + (beamPower + 1));
+      //charlesPort.write("S" + (sensorPower + 1));
+      //charlesPort.write("I" + (internalPower + 1));
     }
     currentScreen.oscMessage(theOscMessage);
   } 

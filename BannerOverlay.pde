@@ -21,9 +21,9 @@ public class BannerOverlay {
   private PImage[] icons = new PImage[1];
 
 
- //String pathBase = "C:/Users/tom/Dropbox/starship/tacticalconsole/data/";  
+ String pathBase = "C:/Users/tom/Dropbox/starship/tacticalconsole/data/";  
   //String pathBase = "C:/Users/tom/Documents/sketch/bannertest/data/";
-  String pathBase = "c:/game/dev/tacticalconsole/data/";    //LIVE
+ // String pathBase = "c:/game/dev/tacticalconsole/data/";    //LIVE
 
 
 
