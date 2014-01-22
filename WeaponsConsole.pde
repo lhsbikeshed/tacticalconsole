@@ -245,13 +245,11 @@ public class WeaponsConsole implements Display {
         }
         if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
           textFont(font, 12);
-          if (sensorPower >= 3) {
-            String h = String.format("%.2f", t.stats[0] * 100);
-            text(t.name +": " + h + "%", x + 10, y + 30);
-          } 
-          else {
-            text(t.name + ": ???%", x + 10, y +30);
-          }
+          
+          String h = String.format("%.2f", t.stats[0] * 100);
+          text(t.name +": " + h + "%", x + 10, y + 15);
+          
+          
           text(scanCode, x + 10, y);
         } 
         else {
@@ -318,13 +316,7 @@ public class WeaponsConsole implements Display {
           line(352, 426, x, y);
         }
 
-        if (sensorPower > 3) {
-          String h = String.format("%.2f", t.stats[1]);
-          text(t.statNames[1] + ": "+ h, x + 10, y + 20);
-        } 
-        else {
-          text(t.statNames[1] + ": ????", x + 10, y + 20);
-        }
+        
       }
     }
   }
