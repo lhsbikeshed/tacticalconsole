@@ -8,18 +8,22 @@ import java.util.List;
 
 public class WeaponsConsole implements Display {
 
-
+  public static final int MODE_SCANNER = 0;
+  public static final int MODE_LOCKED = 1;
 
   //images etc
   PImage[] banners = new PImage[3];
   PImage bgImage;
-  PImage scannerImage;
+  PImage scannerImage, titleImage;
   PImage decoyButton, beamButton, decoyButtonD, beamButtonD;
   PImage grappleButton, grappleButtonD;
   PImage launchDetected;
 
   PFont font; 
   float firingTime = 0; //time a laser firing started
+
+  //current screen mode
+  int mode = MODE_SCANNER;
 
   //targetting crap
   List<TargetObject> targets = Collections.synchronizedList(new ArrayList<TargetObject>());
@@ -48,9 +52,11 @@ public class WeaponsConsole implements Display {
   long blinkenBoolTimer  =0;
 
   public boolean hookArmed = false;
-  
+
   //sensor power to range mapping
-  int[] sensorRanges = { 0, 600, 900, 1400 };
+  int[] sensorRanges = { 
+    0, 600, 900, 1400
+  };
 
 
 
@@ -65,7 +71,7 @@ public class WeaponsConsole implements Display {
     //load resources
     font = loadFont("HanzelExtendedNormal-48.vlw");
     bgImage = loadImage("tacticalscreen2.png");
-
+    titleImage = loadImage("weaponsTitle.png");
 
 
     scannerImage = loadImage("radarscanner.png");
@@ -94,110 +100,105 @@ public class WeaponsConsole implements Display {
 
     background(0, 0, 0);    
     noStroke();    
-    image(bgImage, 0, 0);
+    if(mode == MODE_SCANNER){
+      image(bgImage,0,0);
+      drawTargets();
+    }
+    drawSideBar();
+  }
+  
+  void drawSideBar(){
+    image(titleImage, 7, 5);
+    //draw sidebar stuff
+    fill(255, 255, 0);
+    textFont(font, 12);
+    text("Smartbombs:" + shipState.smartBombsLeft, 776, 44);
+    text("Beam Power:" + (beamPower * 25) + "%", 776, 64);
+    text("Sensor Power:" + (sensorPower * 25) + "%", 776, 84);
 
-
-
-    //gray shit out and put offline over the top
-    if (offline) {
-      fill(0, 0, 0, 200);
-      rect(0, 0, width, height);
-      fill(255, 255, 255);
-      textFont(font, 80);
-      text("OFFLINE", 250, 420);
-    } 
-    else {
-      
-      //draw sidebar stuff
-      fill(255, 255, 0);
-      textFont(font, 12);
-      text("Smartbombs:" + shipState.smartBombsLeft, 776, 44);
-      text("Beam Power:" + (beamPower * 25) + "%", 776, 64);
-      text("Sensor Power:" + (sensorPower * 25) + "%", 776, 84);
-
-      text("Max Beam Range: " + maxBeamRange, 780, 500);
-      text("Sensor range: " + sensorRanges[sensorPower - 1], 780, 520);
-      synchronized(targets) {
-        Collections.sort(targets);  //sorted by distance from ship
-        int ypos = 260;
-        for (TargetObject t : targets) {
-          if (t.targetted) {
-            fill(255, 0, 0);
-          }
-          else {
-            if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
-              fill(0, 255, 0);
-            } 
-            else {
-              fill(100, 100, 100);
-            }
-          }
-          if(t.pos.mag() > sensorRanges[sensorPower - 1]){
-            text("???", 710, ypos);
-          } else {
-            text(t.scanId, 710, ypos);
-            
-          }
-          String h = String.format("%.0f", t.pos.mag());
-          text(h, 780, ypos);
-
-          String name = t.name;
-          if (name.length() > 12) {
-            name = name.substring(0, 12) + "..";
-          }
-          if(t.pos.mag() > sensorRanges[sensorPower - 1]){
-            name = "???";
-          }
-          text(name, 855, ypos);
-
-          if (ypos + 20 > 420) {
-            break;
+    text("Max Beam Range: " + maxBeamRange, 780, 500);
+    text("Sensor range: " + sensorRanges[sensorPower - 1], 780, 520);
+    synchronized(targets) {
+      Collections.sort(targets);  //sorted by distance from ship
+      int ypos = 260;
+      for (TargetObject t : targets) {
+        if (t.targetted) {
+          fill(255, 0, 0);
+        }
+        else {
+          if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
+            fill(0, 255, 0);
           } 
           else {
-            ypos += 20;
+            fill(100, 100, 100);
           }
         }
-      }
-      //text in the scanning ID field
-      fill(0, 255, 0);
-      text(scanString, 800, 190);
-
-
-      fill(0,128,0,100);
-      int sensorSize = sensorRanges[sensorPower - 1];
-      ellipse(353 , 422, sensorSize / 2, sensorSize / 2);
-      
-      drawTargets();
-      if (hookArmed) {
-        if (blinkenBool) {
-          image(grappleButton, 790, 412);
+        if (t.pos.mag() > sensorRanges[sensorPower - 1]) {
+          text("???", 710, ypos);
         } 
         else {
-          image(grappleButtonD, 790, 412);
+          text(t.scanId, 710, ypos);
         }
-      } 
-      else {
-        if (blinkenBool && fireEnabled) { 
-          image(beamButton, 790, 412);
-        }
-        if (blinkenBool && flareEnabled) { 
-          image(decoyButton, 790, 480);
-        }
-      }
+        String h = String.format("%.0f", t.pos.mag());
+        text(h, 780, ypos);
 
-      if (smartBombFireTime + 1000 > millis()) {
-        float radius = (millis() - smartBombFireTime) / 1000.0f;
-        noFill();
-        strokeWeight(3);
-        stroke(70, 70, 255);
-        ellipse( 352, 426, radius * 250, radius * 250);
+        String name = t.name;
+        if (name.length() > 12) {
+          name = name.substring(0, 12) + "..";
+        }
+        if (t.pos.mag() > sensorRanges[sensorPower - 1]) {
+          name = "???";
+        }
+        text(name, 855, ypos);
+
+        if (ypos + 20 > 420) {
+          break;
+        } 
+        else {
+          ypos += 20;
+        }
       }
     }
-    noStroke();
+    //text in the scanning ID field
+    fill(0, 255, 0);
+    text(scanString, 800, 190);
+
+
+    fill(0, 128, 0, 100);
+    int sensorSize = sensorRanges[sensorPower - 1];
+    ellipse(353, 422, sensorSize / 2, sensorSize / 2);
+
+
+    if (hookArmed) {
+      if (blinkenBool) {
+        image(grappleButton, 790, 412);
+      } 
+      else {
+        image(grappleButtonD, 790, 412);
+      }
+    } 
+    else {
+      if (blinkenBool && fireEnabled) { 
+        image(beamButton, 790, 412);
+      }
+      if (blinkenBool && flareEnabled) { 
+        image(decoyButton, 790, 480);
+      }
+    }
+
+    if (smartBombFireTime + 1000 > millis()) {
+      float radius = (millis() - smartBombFireTime) / 1000.0f;
+      noFill();
+      strokeWeight(3);
+      stroke(70, 70, 255);
+      ellipse( 352, 426, radius * 250, radius * 250);
+    }
   }
 
 
+
   void drawTargets() {
+    textFont(font, 12);
     fireEnabled = false;
     strokeWeight(1);
     synchronized(targets) {
@@ -206,7 +207,7 @@ public class WeaponsConsole implements Display {
         //update logic bits
         //if no update received for 280ms then remove this target
         if (millis() - t.lastUpdateTime > 300) {
-          if(t.targetted){
+          if (t.targetted) {
             consoleAudio.playClip("targetDestroyed");
           }
           targets.remove(i);
@@ -219,11 +220,12 @@ public class WeaponsConsole implements Display {
 
         float x = 352 + map(lerpX, -2000, 2000, -352, 352);
         float y = 426 + map(lerpY, -2000, 2000, -426, 426);
-        
+
         //set target colour
-        if(t.pos.mag() > sensorRanges[sensorPower - 1]){
-          fill(100,100,100);
-        } else if (t.pos.mag() < 200) {
+        if (t.pos.mag() > sensorRanges[sensorPower - 1]) {
+          fill(100, 100, 100);
+        } 
+        else if (t.pos.mag() < 200) {
 
           fill(255, 0, 0);
         } 
@@ -241,7 +243,7 @@ public class WeaponsConsole implements Display {
         if (t.scanId < 1000) {
           scanCode = "0" + scanCode;
         }
-        if(t.pos.mag() < sensorRanges[sensorPower - 1]){
+        if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
           textFont(font, 12);
           if (sensorPower >= 3) {
             String h = String.format("%.2f", t.stats[0] * 100);
@@ -251,7 +253,8 @@ public class WeaponsConsole implements Display {
             text(t.name + ": ???%", x + 10, y +30);
           }
           text(scanCode, x + 10, y);
-        } else {
+        } 
+        else {
           fill(128);
           text("???", x + 10, y);
         }
@@ -493,7 +496,7 @@ public class WeaponsConsole implements Display {
           t.dead = true;
           t.targetted = false;
           println("target remove");
-          if(t.targetted){
+          if (t.targetted) {
             consoleAudio.playClip("targetDestroyed");
           }
         }
