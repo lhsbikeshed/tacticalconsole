@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = false;;
+boolean testMode = true;;
 
 
 
@@ -35,7 +35,7 @@ ConsoleAudio consoleAudio;
 
 DropDisplay dropDisplay; //display for the drop scene
 WarpDisplay2 warpDisplay; //warp scene
-WeaponsConsole weaponsDisplay;  //tactical weapons display
+WeaponsConsole2 weaponsDisplay;  //tactical weapons display
 SignalTracker signalTracker;    //signal tracker for nebula scene
 TowingDisplay towingDisplay;    //grappling hook display
 
@@ -112,7 +112,7 @@ serverIP = "127.0.0.1";
   dropDisplay = new DropDisplay();
   //radarDisplay = new RadarDisplay();
   warpDisplay = new WarpDisplay2();
-  weaponsDisplay = new WeaponsConsole(oscP5, serverIP, this);
+  weaponsDisplay = new WeaponsConsole2(oscP5, serverIP, this);
   signalTracker = new SignalTracker(oscP5, serverIP);
   //towingDisplay = new TowingDisplay(oscP5, serverIP);
 
