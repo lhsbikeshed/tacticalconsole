@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = true;;
+boolean testMode = false;;
 
 
 
@@ -100,12 +100,11 @@ void setup() {
     serialEnabled = true;
     serverIP = "10.0.0.100";
     frame.setLocation(1024, 0);
-    serialPort = new Serial(this, "COM3", 9600);
-    //charlesPort = new Serial(this, "COM5", 9600);
+    serialPort = new Serial(this, "COM7", 9600);
+    charlesPort = new Serial(this, "COM5", 9600);
     hideCursor();
   }
-//REMOVEME
-serverIP = "127.0.0.1";
+
 
 
   oscP5 = new OscP5(this, 12004);
@@ -273,7 +272,7 @@ void draw() {
           /* sync current display to server */
           OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
           oscP5.send(myMessage, new NetAddress(serverIP, 12000));
-          oscP5.send(myMessage, new NetAddress(serverIP, 12000));
+          //oscP5.send(myMessage, new NetAddress(serverIP, 12000));
           bannerSystem.cancel();
           println("BOOTED");
         }
@@ -298,6 +297,13 @@ void draw() {
       image(noiseImage, 0, 0, width, height);
     }
   }
+  if (shipState.poweredOn && shipState.hullState < 20.0f){
+    if(random(1000) < 10){
+      if(serialEnabled){
+        serialPort.write("F,");
+      }
+    }
+  }
 }
 
 void setDecoyBlinkerState(boolean state){
@@ -318,21 +324,7 @@ void setDecoyBlinkerState(boolean state){
 
 void oscEvent(OscMessage theOscMessage) {
   // println(theOscMessage);
-  if (theOscMessage.checkAddrPattern("/scene/change")==true) {
-    /*
-    int disp = theOscMessage.get(0).intValue();
-     if (disp > displayListMap.length ) {
-     disp = 0;
-     }
-     println(disp);
-     disp = displayListMap[disp];
-     println(disp);
-     displayList[currentDisplay].stop();
-     currentDisplay = disp;
-     displayList[currentDisplay].start();
-     return;*/
-  } 
-  else if (theOscMessage.checkAddrPattern("/scene/warzone/weaponState") == true) {
+ if (theOscMessage.checkAddrPattern("/scene/warzone/weaponState") == true) {
     int msg = theOscMessage.get(0).intValue();
     if (msg == 1) {
       if (serialEnabled) {
@@ -371,7 +363,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
         serialPort.write("p,");
         decoyBlinker = false;
-        //charlesPort.write("R0,");
+        charlesPort.write("R0,");
       }
     } 
     else {
@@ -383,7 +375,7 @@ void oscEvent(OscMessage theOscMessage) {
         changeDisplay(bootDisplay);
         if (serialEnabled) {
           serialPort.write("P,");
-          //charlesPort.write("R1,");
+          charlesPort.write("R1,");
         }
       }
     }
@@ -395,7 +387,7 @@ void oscEvent(OscMessage theOscMessage) {
     shipState.deathText = theOscMessage.get(0).stringValue();
     if (serialEnabled) {
       serialPort.write("p,");
-      //charlesPort.write("R0,");
+      charlesPort.write("R0,");
     }
   } 
   else if (theOscMessage.checkAddrPattern("/game/reset") == true) {
@@ -424,7 +416,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("P,");
-        //charlesPort.write("R1,");
+        charlesPort.write("R1,");
       }
     } 
     else {
@@ -433,7 +425,7 @@ void oscEvent(OscMessage theOscMessage) {
       if (serialEnabled) {
 
         serialPort.write("p,");
-        //charlesPort.write("R0,");
+        charlesPort.write("R0,");
       }
     }
   }
@@ -446,12 +438,14 @@ void oscEvent(OscMessage theOscMessage) {
     if (serialEnabled) {
 
       serialPort.write("S,");
-      //charlesPort.write("D1,");
+      charlesPort.write("D1,");
+       serialPort.write("F,");
     }
     float damage = theOscMessage.get(0).floatValue();
     if (damage > 8.0 && random(100) < 25) {
       if (serialEnabled) {
         serialPort.write("T,");
+        serialPort.write("F,");
         println("popping panel..");
       }
     }
@@ -465,10 +459,10 @@ void oscEvent(OscMessage theOscMessage) {
     println(beamPower);
     if (serialEnabled) {
       serialPort.write("L" +  beamPower + ",");
-      //charlesPort.write("P" + (propPower + 1));
-      //charlesPort.write("W" + (beamPower + 1));
-      //charlesPort.write("S" + (sensorPower + 1));
-      //charlesPort.write("I" + (internalPower + 1));
+      charlesPort.write("P" + (propPower + 1));
+      charlesPort.write("W" + (beamPower + 1));
+      charlesPort.write("S" + (sensorPower + 1));
+      charlesPort.write("I" + (internalPower + 1));
     }
     currentScreen.oscMessage(theOscMessage);
   } 
@@ -523,6 +517,11 @@ void oscEvent(OscMessage theOscMessage) {
     weaponsDisplay.hookArmed = theOscMessage.get(0).intValue() == 1 ? true : false;
     bannerSystem.displayFor(1500);
   }
+  else if (theOscMessage.checkAddrPattern("/ship/stats")==true) {
+      
+      
+      shipState.hullState = theOscMessage.get(2).floatValue();
+    } 
   else {
     currentScreen.oscMessage(theOscMessage);
   }
@@ -556,6 +555,7 @@ public class ShipState {
   public boolean poweringOn = false ;
   public boolean areWeDead = false;
   public String deathText = "";
+  public float hullState = 100.0f;
 
   public PVector shipPos = new PVector(0, 0, 0);
   public PVector shipRot = new PVector(0, 0, 0);
