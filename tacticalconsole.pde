@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = false;;
+boolean testMode = true;;
 
 
 

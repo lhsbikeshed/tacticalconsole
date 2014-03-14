@@ -14,7 +14,7 @@ public class WeaponsConsole2 implements Display {
   //images etc
   PImage[] banners = new PImage[3];
   PImage bgImage;
-  PImage scannerImage, titleImage;
+  PImage scannerImage, titleImage, hullStateImage;
   PImage decoyButton, beamButton, decoyButtonD, beamButtonD;
   PImage grappleButton, grappleButtonD;
   PImage launchDetected;
@@ -85,6 +85,7 @@ public class WeaponsConsole2 implements Display {
 
     grappleButton = loadImage("grappleFireOn.png");
     grappleButtonD = loadImage("grappleFireOff.png");
+    hullStateImage = loadImage("hulldamageoverlay.png");
   }
 
 
@@ -101,36 +102,35 @@ public class WeaponsConsole2 implements Display {
 
     background(0, 0, 0);    
     noStroke();    
-    if(mode == MODE_SCANNER){
+    if (mode == MODE_SCANNER) {
       fill(0, 128, 0, 100);
       int sensorSize = sensorRanges[sensorPower - 1];
-      ellipse(364, 707, sensorSize , sensorSize );
+      ellipse(364, 707, sensorSize, sensorSize );
       radarTicker += 10;
       noFill();
-      stroke(0,255,0);
+      stroke(0, 255, 0);
       strokeWeight(3);
       arc(364, 707, radarTicker, radarTicker, 4.2, 5.23);
-      if(radarTicker > sensorRanges[sensorPower - 1]){
+      if (radarTicker > sensorRanges[sensorPower - 1]) {
         radarTicker = 175;
       }
-      
 
-      image(bgImage,0,0);
+
+      image(bgImage, 0, 0);
       drawTargets();
     }
     drawSideBar();
     stroke(255);
     fill(255);
     // line(364,707, mouseX,mouseY);
-//    PVector aa = new PVector(364, 707);
-//    PVector b = PVector.fromAngle(mouseX / 100.0f);
-//    b.mult(100.0f);
-//    line(aa.x, aa.y, aa.x + b.x,aa.y+b.y);
-//    text(mouseX / 100.0f, 100,100);
-    
+    //    PVector aa = new PVector(364, 707);
+    //    PVector b = PVector.fromAngle(mouseX / 100.0f);
+    //    b.mult(100.0f);
+    //    line(aa.x, aa.y, aa.x + b.x,aa.y+b.y);
+    //    text(mouseX / 100.0f, 100,100);
   }
-  
-  void drawSideBar(){
+
+  void drawSideBar() {
     image(titleImage, 7, 5);
     //draw sidebar stuff
     fill(255, 255, 0);
@@ -187,7 +187,7 @@ public class WeaponsConsole2 implements Display {
     text(scanString, 800, 190);
 
 
-    
+
 
     if (hookArmed) {
       if (blinkenBool) {
@@ -213,13 +213,20 @@ public class WeaponsConsole2 implements Display {
       stroke(70, 70, 255);
       ellipse( 364, 707, radius * 900, radius * 900);
     }
+
+    //draw hull damage
+    tint( (int)map(shipState.hullState, 0, 100, 255, 0), (int)map(shipState.hullState, 0, 100, 0, 255), 0);
+    image(hullStateImage, 721, 564);
+    textFont(font, 23);
+    text((int)shipState.hullState + "%", 899, 747);
+    noTint();
   }
 
 
 
   void drawTargets() {
-   
-    
+
+
     textFont(font, 12);
     fireEnabled = false;
     strokeWeight(1);
@@ -240,20 +247,22 @@ public class WeaponsConsole2 implements Display {
         float lerpY = lerp(t.lastPos.z, t.pos.z, (millis() - t.lastUpdateTime ) / 250.0f);
         float lerpZ = lerp(t.lastPos.y, t.pos.y, (millis() - t.lastUpdateTime ) / 250.0f);
 
-       // float x = 352 + map(lerpX, -2000, 2000, -352, 352);
+        // float x = 352 + map(lerpX, -2000, 2000, -352, 352);
         //float y = 426 + map(lerpY, -2000, 2000, -426, 426);
-//364,707
+        //364,707
         PVector p = PVector.fromAngle(t.randomAngle);
         p.mult(75 + t.pos.mag() / 3.0f ); //new pos
         PVector lp = PVector.fromAngle(t.randomAngle);
         lp.mult(75 + t.lastPos.mag() / 3.0f );
-        
-        float x = 364 + lerp(lp.x, p.x, (millis() - t.lastUpdateTime ) / 250.0f);;
-        float y = 707 + lerp(lp.y, p.y, (millis() - t.lastUpdateTime ) / 250.0f);;
+
+        float x = 364 + lerp(lp.x, p.x, (millis() - t.lastUpdateTime ) / 250.0f);
+        ;
+        float y = 707 + lerp(lp.y, p.y, (millis() - t.lastUpdateTime ) / 250.0f);
+        ;
 
 
         //set target colour
-        
+
         if (t.pos.mag() > sensorRanges[sensorPower - 1]) {
           fill(100, 100, 100);
         } 
@@ -277,11 +286,11 @@ public class WeaponsConsole2 implements Display {
         }
         if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
           textFont(font, 12);
-          
+
           String h = String.format("%.2f", t.stats[0] * 100);
           text(t.name +": " + h + "%", x + 10, y + 15);
-          
-          
+
+
           text(scanCode, x + 10, y);
         } 
         else {
@@ -347,8 +356,6 @@ public class WeaponsConsole2 implements Display {
           strokeWeight(2);
           line(364, 707, x, y);
         }
-
-        
       }
     }
   }
@@ -573,14 +580,13 @@ public class WeaponsConsole2 implements Display {
     public String name = "missile";
     public float[] stats = new float[2];
     public String[] statNames = new String[2];
-    
+
     public float randomAngle;
 
 
     public TargetObject() {
-     //4.2 - 5.23 
-     randomAngle = map(random(100), 0, 100, 4.2f, 5.23f);
-     
+      //4.2 - 5.23 
+      randomAngle = map(random(100), 0, 100, 4.2f, 5.23f);
     }
 
 
