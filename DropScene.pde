@@ -10,6 +10,7 @@ public class DropDisplay implements Display {
   PImage structFailOverlay;
   PImage offlineBlinker;
   PImage damagedIcon;
+
   PFont font;
 
   boolean fixed = false;
@@ -28,6 +29,7 @@ public class DropDisplay implements Display {
     structFailOverlay = loadImage("structuralFailure.png");
     damagedIcon = loadImage("dropDamage.png");
     offlineBlinker = loadImage("dropOffline.png");
+ 
 
 
     font = loadFont("HanzelExtendedNormal-48.vlw");
