@@ -474,10 +474,10 @@ public class WeaponsConsole implements Display {
         t.lastUpdateTime = millis();
         t.pos = new PVector(x, y, z);
         t.stats[0] = theOscMessage.get(7).floatValue();
-        t.stats[1] = theOscMessage.get(8).floatValue();
-        t.statNames[0] = theOscMessage.get(9).stringValue();
-        t.statNames[1] = theOscMessage.get(10).stringValue();
-        t.name = theOscMessage.get(11).stringValue();
+        //t.stats[1] = theOscMessage.get(8).floatValue();
+        t.statNames[0] = theOscMessage.get(8).stringValue();
+       // t.statNames[1] = theOscMessage.get(10).stringValue();
+        t.name = theOscMessage.get(9).stringValue();
       }
     } 
     else if (theOscMessage.checkAddrPattern("/tactical/weapons/targetRemove")) {
