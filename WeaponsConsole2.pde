@@ -265,6 +265,8 @@ public class WeaponsConsole2 implements Display {
 
         if (t.pos.mag() > sensorRanges[sensorPower - 1]) {
           fill(100, 100, 100);
+          x += random(-5, 5);
+          y += random(-5, 5);
         } 
         else if (t.pos.mag() < 200) {
 
@@ -295,7 +297,11 @@ public class WeaponsConsole2 implements Display {
         } 
         else {
           fill(128);
-          text("???", x + 10, y);
+          StringBuilder s = new StringBuilder(t.name);
+            for(int c = 0; c < (int)random(3,s.length()); c++){
+              s.setCharAt( (int)random(0, s.length()), (char)random(0, 255));
+            }
+          text(s.toString(), x + 10, y);
         }
 
         if (t.dead) {
@@ -514,10 +520,10 @@ public class WeaponsConsole2 implements Display {
         t.lastUpdateTime = millis();
         t.pos = new PVector(x, y, z);
         t.stats[0] = theOscMessage.get(7).floatValue();
-        t.stats[1] = theOscMessage.get(8).floatValue();
-        t.statNames[0] = theOscMessage.get(9).stringValue();
-        t.statNames[1] = theOscMessage.get(10).stringValue();
-        t.name = theOscMessage.get(11).stringValue();
+       // t.stats[1] = theOscMessage.get(8).floatValue();
+        t.statNames[0] = theOscMessage.get(8).stringValue();
+      //  t.statNames[1] = theOscMessage.get(10).stringValue();
+        t.name = theOscMessage.get(9).stringValue();
       }
     } 
     else if (theOscMessage.checkAddrPattern("/tactical/weapons/targetRemove")) {
