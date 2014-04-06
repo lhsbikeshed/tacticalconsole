@@ -17,7 +17,8 @@ import java.awt.image.BufferedImage;
 //CHANGE ME for testing
 //disables serial port access
 //and sets server to localhost
-boolean testMode = true;;
+boolean testMode = true;
+;
 
 
 
@@ -206,10 +207,11 @@ void dealWithSerial(String vals) {
   }
 }
 
-void probeCableState(){
-  if(serialEnabled){
+void probeCableState() {
+  if (serialEnabled) {
     serialPort.write("C,");
-  } else {
+  } 
+  else {
     println("probed cable puzzle state");
   }
 }
@@ -297,34 +299,35 @@ void draw() {
       image(noiseImage, 0, 0, width, height);
     }
   }
-  if (shipState.poweredOn && shipState.hullState < 20.0f){
-    if(random(1000) < 10){
-      if(serialEnabled){
-        serialPort.write("F,");
-      }
+//  if (shipState.poweredOn && shipState.hullState < 20.0f) {
+//    if (random(1000) < 10) {
+//      if (serialEnabled) {
+//        serialPort.write("F,");
+//      }
+//    }
+//  }
+}
+
+void setDecoyBlinkerState(boolean state) {
+  if (!serialEnabled) {
+    return;
+  }
+  if (state != decoyBlinker) {
+    if (state) {
+      decoyBlinker = true;
+      serialPort.write("D,");
+    } 
+    else {
+      decoyBlinker = false;
+      serialPort.write("d,");
     }
   }
 }
 
-void setDecoyBlinkerState(boolean state){
-  if(!serialEnabled){
-    return;
-  }
-  if(state != decoyBlinker){
-    if(state){
-      decoyBlinker = true;
-      serialPort.write("D,");
-    } else {
-        decoyBlinker = false;
-        serialPort.write("d,");
-    }
-  }
-}
-    
 
 void oscEvent(OscMessage theOscMessage) {
   // println(theOscMessage);
- if (theOscMessage.checkAddrPattern("/scene/warzone/weaponState") == true) {
+  if (theOscMessage.checkAddrPattern("/scene/warzone/weaponState") == true) {
     int msg = theOscMessage.get(0).intValue();
     if (msg == 1) {
       if (serialEnabled) {
@@ -439,23 +442,23 @@ void oscEvent(OscMessage theOscMessage) {
 
       serialPort.write("S,");
       charlesPort.write("D1,");
-       serialPort.write("F,");
+     // serialPort.write("F,");
     }
     float damage = theOscMessage.get(0).floatValue();
-    if (damage > 8.0 && random(100) < 25) {
-      if (serialEnabled) {
-        serialPort.write("T,");
-        serialPort.write("F,");
-        println("popping panel..");
-      }
-    }
+//    if (damage > 8.0 && random(100) < 25) {
+//      if (serialEnabled) {
+//        serialPort.write("T,");
+//        serialPort.write("F,");
+//        println("popping panel..");
+//      }
+//    }
   } 
   else if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
     int beamPower = theOscMessage.get(3).intValue() - 1;  //write charge rate
     int propPower = theOscMessage.get(0).intValue() - 1;
     int sensorPower = theOscMessage.get(2).intValue() - 1;
     int internalPower = theOscMessage.get(1).intValue() - 1;
-    
+
     println(beamPower);
     if (serialEnabled) {
       serialPort.write("L" +  beamPower + ",");
@@ -518,10 +521,23 @@ void oscEvent(OscMessage theOscMessage) {
     bannerSystem.displayFor(1500);
   }
   else if (theOscMessage.checkAddrPattern("/ship/stats")==true) {
-      
-      
-      shipState.hullState = theOscMessage.get(2).floatValue();
-    } 
+
+
+    shipState.hullState = theOscMessage.get(2).floatValue();
+  } 
+  else if (theOscMessage.checkAddrPattern("/ship/effect/openFlap")) {
+    println("popping panel..");
+    if (serialEnabled) {
+      serialPort.write("T,");
+      serialPort.write("F,");
+    }
+  } 
+  else if (theOscMessage.checkAddrPattern("/ship/effect/flapStrobe")) {
+    println("strobe..");
+    if (serialEnabled) {
+      serialPort.write("F,");
+    }
+  }
   else {
     currentScreen.oscMessage(theOscMessage);
   }
