@@ -73,10 +73,8 @@ String lastSerial = "";
 //hearbeat blinking timer
 long heartBeatTimer = 0;
 
-//time we last got damaged
-int damageTimer = -1000;
-PImage noiseImage; //static image that flashes
-
+//damage effects
+DamageEffect damageEffects;
 
 //global var for blinking things, this toggles true/false every 750ms
 boolean globalBlinker = false;
@@ -135,11 +133,13 @@ void setup() {
   if (serialEnabled) {
     serialPort.write("p,");
   }
-  noiseImage = loadImage("noise.png");
 
   //audio stuff
   minim = new Minim(this);
   consoleAudio = new ConsoleAudio(minim);
+
+  //damage stuff
+  damageEffects = new DamageEffect();
 
   /*sync to current game screen*/
   OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
@@ -261,7 +261,7 @@ void draw() {
     }
   } 
   else {
-
+    damageEffects.startTransform();
     if (shipState.poweredOn) {
       currentScreen.draw();
     } 
@@ -282,6 +282,7 @@ void draw() {
     }
     hint(DISABLE_DEPTH_TEST) ;
     bannerSystem.draw();
+    damageEffects.stopTransform();
   }
 
   if (heartBeatTimer > 0) {
@@ -294,18 +295,21 @@ void draw() {
       heartBeatTimer = -1;
     }
   }
-  if ( damageTimer + 1000 > millis()) {
-    if (random(10) > 3) {
-      image(noiseImage, 0, 0, width, height);
-    }
-  }
-//  if (shipState.poweredOn && shipState.hullState < 20.0f) {
-//    if (random(1000) < 10) {
-//      if (serialEnabled) {
-//        serialPort.write("F,");
-//      }
-//    }
-//  }
+
+
+  damageEffects.draw();
+  //  if ( damageTimer + 1000 > millis()) {
+  //    if (random(10) > 3) {
+  //      image(noiseImage, 0, 0, width, height);
+  //    }
+  //  }
+  //  if (shipState.poweredOn && shipState.hullState < 20.0f) {
+  //    if (random(1000) < 10) {
+  //      if (serialEnabled) {
+  //        serialPort.write("F,");
+  //      }
+  //    }
+  //  }
 }
 
 void setDecoyBlinkerState(boolean state) {
@@ -437,21 +441,14 @@ void oscEvent(OscMessage theOscMessage) {
   } 
   else if (theOscMessage.checkAddrPattern("/ship/damage")==true) {
 
-    damageTimer = millis();
+    float damage = theOscMessage.get(0).floatValue();
+    damageEffects.startEffect(1000);
     if (serialEnabled) {
 
       serialPort.write("S,");
       charlesPort.write("D1,");
-     // serialPort.write("F,");
+      // serialPort.write("F,");
     }
-    float damage = theOscMessage.get(0).floatValue();
-//    if (damage > 8.0 && random(100) < 25) {
-//      if (serialEnabled) {
-//        serialPort.write("T,");
-//        serialPort.write("F,");
-//        println("popping panel..");
-//      }
-//    }
   } 
   else if (theOscMessage.checkAddrPattern("/control/subsystemstate") == true) {
     int beamPower = theOscMessage.get(3).intValue() - 1;  //write charge rate
@@ -459,7 +456,7 @@ void oscEvent(OscMessage theOscMessage) {
     int sensorPower = theOscMessage.get(2).intValue() - 1;
     int internalPower = theOscMessage.get(1).intValue() - 1;
 
-    println(beamPower);
+   
     if (serialEnabled) {
       serialPort.write("L" +  beamPower + ",");
       charlesPort.write("P" + (propPower + 1));
@@ -544,6 +541,7 @@ void oscEvent(OscMessage theOscMessage) {
 }
 
 void mouseClicked() {
+   damageEffects.startEffect(1000);
   println (":" + mouseX + "," + mouseY);
 }
 
