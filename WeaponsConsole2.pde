@@ -122,12 +122,12 @@ public class WeaponsConsole2 implements Display {
     drawSideBar();
     stroke(255);
     fill(255);
-    // line(364,707, mouseX,mouseY);
-    //    PVector aa = new PVector(364, 707);
-    //    PVector b = PVector.fromAngle(mouseX / 100.0f);
-    //    b.mult(100.0f);
-    //    line(aa.x, aa.y, aa.x + b.x,aa.y+b.y);
-    //    text(mouseX / 100.0f, 100,100);
+
+
+    //does the current target have hull/weapons/engines stats? If so draw them
+    String[] stats = {"hullHealth", "weaponHealth", "engineHealth"};
+    //textFont(font, 15);
+    //text("TARGET INFO:\r\n HULL: 100%\r\nWEAPONS: 100%\r\nENGINES: 100%", mouseX, mouseY);
   }
 
   void drawSideBar() {
@@ -174,7 +174,7 @@ public class WeaponsConsole2 implements Display {
         }
         text(name, 855, ypos);
 
-        if (ypos + 20 > 420) {
+        if (ypos + 20 > 400) {
           break;
         } 
         else {
@@ -298,9 +298,9 @@ public class WeaponsConsole2 implements Display {
         else {
           fill(128);
           StringBuilder s = new StringBuilder(t.name);
-            for(int c = 0; c < (int)random(3,s.length()); c++){
-              s.setCharAt( (int)random(0, s.length()), (char)random(0, 255));
-            }
+          for (int c = 0; c < (int)random(3,s.length()); c++) {
+            s.setCharAt( (int)random(0, s.length()), (char)random(0, 255));
+          }
           text(s.toString(), x + 10, y);
         }
 
@@ -361,6 +361,12 @@ public class WeaponsConsole2 implements Display {
           stroke(255, 255, 0);
           strokeWeight(2);
           line(364, 707, x, y);
+        }
+        Float f = t.getStat("firing");
+        if(f != null && f > 0.0f){
+          stroke(255, 0, 0);
+          strokeWeight(4);
+          line(x,y, 364, 707);
         }
       }
     }
@@ -520,10 +526,22 @@ public class WeaponsConsole2 implements Display {
         t.lastUpdateTime = millis();
         t.pos = new PVector(x, y, z);
         t.stats[0] = theOscMessage.get(7).floatValue();
-       // t.stats[1] = theOscMessage.get(8).floatValue();
+        // t.stats[1] = theOscMessage.get(8).floatValue();
         t.statNames[0] = theOscMessage.get(8).stringValue();
-      //  t.statNames[1] = theOscMessage.get(10).stringValue();
+        //  t.statNames[1] = theOscMessage.get(10).stringValue();        
         t.name = theOscMessage.get(9).stringValue();
+        
+        
+        //now unpack the stat string
+        String statString = theOscMessage.get(10).stringValue();
+        String[] pairs = statString.split(",");
+        for (String p : pairs) {          
+          String[] vals = p.split(":");
+          t.setStat(vals[0], Float.parseFloat(vals[1]));
+        }
+        
+        
+        
       }
     } 
     else if (theOscMessage.checkAddrPattern("/tactical/weapons/targetRemove")) {
@@ -588,7 +606,7 @@ public class WeaponsConsole2 implements Display {
     public String[] statNames = new String[2];
 
     public float randomAngle;
-
+    protected HashMap<String, Float> statMap = new HashMap<String, Float>();
 
     public TargetObject() {
       //4.2 - 5.23 
@@ -598,6 +616,21 @@ public class WeaponsConsole2 implements Display {
 
     public int compareTo(TargetObject other) {
       return (int)(this.pos.mag() - other.pos.mag());
+    }
+
+    public void clearStats() {
+      statMap.clear();
+    }
+
+    public void setStat(String name, float val) {
+      Float f = new Float(val);
+      // println("setting stat: " + name);
+      statMap.put(name, val);
+    }
+
+    public Float getStat(String name) {
+      Float f = statMap.get(name);
+      return f;
     }
   }
 }
