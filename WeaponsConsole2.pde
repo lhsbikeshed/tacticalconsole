@@ -125,7 +125,9 @@ public class WeaponsConsole2 implements Display {
 
 
     //does the current target have hull/weapons/engines stats? If so draw them
-    String[] stats = {"hullHealth", "weaponHealth", "engineHealth"};
+    String[] stats = {
+      "hullHealth", "weaponHealth", "engineHealth"
+    };
     //textFont(font, 15);
     //text("TARGET INFO:\r\n HULL: 100%\r\nWEAPONS: 100%\r\nENGINES: 100%", mouseX, mouseY);
   }
@@ -279,21 +281,37 @@ public class WeaponsConsole2 implements Display {
           fill(0, 255, 0);
         }
 
+        //draw the target on the radar
 
-        int size = (int) map(lerpZ, -2000, 2000, 1, 20);
-        ellipse(x, y, size, size);
+        ellipse(x, y, 10, 10);
         String scanCode = "" + t.scanId;
         if (t.scanId < 1000) {
           scanCode = "0" + scanCode;
         }
-        if (t.pos.mag() < sensorRanges[sensorPower - 1]) {
+        if (t.pos.mag() < sensorRanges[sensorPower - 1]) {    //grey it out if its outside of sensor range, if not then draw
           textFont(font, 12);
 
           String h = String.format("%.2f", t.stats[0] * 100);
           text(t.name +": " + h + "%", x + 10, y + 15);
-
-
           text(scanCode, x + 10, y);
+          //are there any extended stats on this? 
+          Float f = t.getStat("scanning");
+          if (f != null && f > 0.0f) {
+            //draw a scanning effect around the target
+            int maxSize = 70;
+            int size = (int)map( millis() % 2000, 0, 2000, 0, maxSize);
+            noFill();
+            strokeWeight(2);
+            stroke(0, 128, 255, map(size, 0, maxSize, 255, 0));
+            ellipse(x, y, size, size);
+            size = (int)map( (millis() + 1000) % 2000, 0, 2000, 0, maxSize);
+            stroke(0, 128, 255, map(size, 0, maxSize, 255, 0));
+            ellipse(x, y, size, size);
+          }
+          f = t.getStat("chargingWeapons");
+          if (f != null && f > 0.0f) {
+            //warn the player that the target is charging its weapons
+          }
         } 
         else {
           fill(128);
@@ -357,16 +375,18 @@ public class WeaponsConsole2 implements Display {
           popMatrix();
         }
 
+        //draw a beam out to the target if we are firing
         if (t.beingFiredAt && firingTime + 400 > millis()) {
           stroke(255, 255, 0);
           strokeWeight(2);
           line(364, 707, x, y);
         }
+        //draw a beam to the ship if the target is firing at us
         Float f = t.getStat("firing");
-        if(f != null && f > 0.0f){
+        if (f != null && f > 0.0f) {
           stroke(255, 0, 0);
           strokeWeight(4);
-          line(x,y, 364, 707);
+          line(x, y, 364, 707);
         }
       }
     }
@@ -530,8 +550,8 @@ public class WeaponsConsole2 implements Display {
         t.statNames[0] = theOscMessage.get(8).stringValue();
         //  t.statNames[1] = theOscMessage.get(10).stringValue();        
         t.name = theOscMessage.get(9).stringValue();
-        
-        
+
+
         //now unpack the stat string
         String statString = theOscMessage.get(10).stringValue();
         String[] pairs = statString.split(",");
@@ -539,9 +559,6 @@ public class WeaponsConsole2 implements Display {
           String[] vals = p.split(":");
           t.setStat(vals[0], Float.parseFloat(vals[1]));
         }
-        
-        
-        
       }
     } 
     else if (theOscMessage.checkAddrPattern("/tactical/weapons/targetRemove")) {
