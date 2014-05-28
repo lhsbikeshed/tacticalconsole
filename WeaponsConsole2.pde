@@ -448,58 +448,60 @@ public class WeaponsConsole2 implements Display {
 
     if (isScanning == false) {
       if (action.equals("SCAN")) {
-        currentTarget = null;
-        println("scan");
-
-        int sId = 0;
-        try {
-          sId = Integer.parseInt(scanString);
-          //find what were scanning
-          boolean targetFound = false;
-          synchronized(targets) {
-            for (TargetObject t : targets) {
-              if (sId == t.scanId) {
-                t.scanCountDown = (5 - sensorPower) * 21;
-                targetFound = true;
-              } 
-              else {
-                if (t.targetted) {
-                  t.scanCountDown = -1;
-                  t.targetted = false;
-                  t.beingFiredAt = false;
-                  OscMessage myMessage = new OscMessage("/system/targetting/untargetObject");
-                  myMessage.add(t.hashCode);
-                  osc.flush(myMessage, new NetAddress(serverIP, 12000));
-                }
-              }
-            }
-
-            if (targetFound) {
-              consoleAudio.playClip("targetting");
-            } 
-            else {
-              consoleAudio.playClip("outOfRange");
-            }
-          }
-        } 
-        catch (NumberFormatException e) {
-        }
-
-        scanString = "";
+        scanTarget();
       } 
       else {
         println(action.charAt(0));
         if ( action.charAt(0) >= '0' && action.charAt(0) <= '9') {
           scanString = scanString + action;
-          if (scanString.length() > 4 ) {
-            scanString = "";
+          if (scanString.length() >= 4 ) {
+            scanTarget();
           }
         }
       }
     }
   }
 
+  void scanTarget() {
+    currentTarget = null;
+    println("scan");
 
+    int sId = 0;
+    try {
+      sId = Integer.parseInt(scanString);
+      //find what were scanning
+      boolean targetFound = false;
+      synchronized(targets) {
+        for (TargetObject t : targets) {
+          if (sId == t.scanId) {
+            t.scanCountDown = (5 - sensorPower) * 21;
+            targetFound = true;
+          } 
+          else {
+            if (t.targetted) {
+              t.scanCountDown = -1;
+              t.targetted = false;
+              t.beingFiredAt = false;
+              OscMessage myMessage = new OscMessage("/system/targetting/untargetObject");
+              myMessage.add(t.hashCode);
+              osc.flush(myMessage, new NetAddress(serverIP, 12000));
+            }
+          }
+        }
+
+        if (targetFound) {
+          consoleAudio.playClip("targetting");
+        } 
+        else {
+          consoleAudio.playClip("outOfRange");
+        }
+      }
+    } 
+    catch (NumberFormatException e) {
+    }
+
+    scanString = "";
+  }
 
 
   public void oscMessage(OscMessage theOscMessage) {
