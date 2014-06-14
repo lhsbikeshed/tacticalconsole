@@ -43,7 +43,7 @@ public class CablePuzzleDisplay implements Display {
     if(blinker){
       image(bannerImg, 247, 315);
       textFont(font, 15);
-      text("Error code 0x0030400" + errorCodes[selectedPatch], 418,408);
+      text("Error code " + errorCodes[selectedPatch], 418,408);
     }
     
   }
