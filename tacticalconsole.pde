@@ -120,6 +120,7 @@ void setup() {
   displayMap.put("hyperspace", warpDisplay);
   displayMap.put("signalTracker", signalTracker);
   displayMap.put("selfdestruct", new DestructDisplay());
+  displayMap.put("cablepuzzle", new CablePuzzleDisplay());
   // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());
   currentScreen = weaponsDisplay;
