@@ -1,4 +1,4 @@
-public class WarpDisplay2 implements Display {
+public class WarpDisplay implements Display {
 
   PImage bgImage;
   PImage overlayImage;
@@ -36,8 +36,12 @@ public class WarpDisplay2 implements Display {
   
   int planetX;
   float planetScale = 0.6f;
+  
+  
+  int screenFlashTimer = 0;
+ 
 
-  public WarpDisplay2() {
+  public WarpDisplay() {
     bgImage = loadImage("hyperspace2.png");
     overlayImage = loadImage("hyperfailoverlay.png");
     shipIcon = loadImage("hyperShipIcon.png");
@@ -79,20 +83,24 @@ public class WarpDisplay2 implements Display {
     }
   }
   public void start() {
-    sceneStart = millis();
-    timeRemaining = 30;
-    warpingIn = true;
-    warpingOut = false;
-    planetX = width;
-    thisIsFail = false;
-    planetScale = 0.6f;
-    exitStartTime = -1;
+   
+      sceneStart = millis();
+      timeRemaining = 30;
+      warpingIn = true;
+      warpingOut = false;
+      planetX = width;
+      thisIsFail = false;
+      planetScale = 0.6f;
+      exitStartTime = -1;
+      
+     
   }
   public void stop()
   {
     haveFailed = false;
     warpAmount = 0.0f;
     warpingIn = false;
+   
   }
 
   void drawGrid() {
@@ -101,10 +109,13 @@ public class WarpDisplay2 implements Display {
     warpGrid.stroke(255, 0, 0);
     warpGrid.strokeWeight(1);
     sinOffset += 0.01f;
-    if (sceneStart + 3000 > millis() && warpingIn) {
-      warpAmount = map(millis() - sceneStart, 0, 3000, 0.0, 1.0);
+    if (sceneStart + 5000 > millis() && warpingIn) {
+      warpAmount = map(millis() - sceneStart, 0, 5000, 0.0, 1.0);
     } 
     else {
+      if(warpingIn){
+        screenFlashTimer = 40;
+      }
       warpingIn = false;
     }
     if(warpingOut){
@@ -194,18 +205,29 @@ public class WarpDisplay2 implements Display {
     image(shipIcon, 75, 422);
     fill(255, 255, 0);
     textFont(font, 40);
-    if (timeRemaining >= 0.0f) {
-      float t = lerp(lastTimeRemaining, timeRemaining, (millis() - lastUpdate) / 250.0f); 
-      text(t, 756, 114);
+    if (timeRemaining >= 0.0f ) {
+      if( millis() - lastUpdate < 275f){
+        float t = lerp(lastTimeRemaining, timeRemaining, (millis() - lastUpdate) / 250.0f); 
+        text(t, 756, 114);
+      }
     } 
     else {
       if(warpingOut == false){
         exitStartTime = millis();
         warpingOut = true;
       }
-      text("EXITING HYPERSPACE", 260, 180);
+    }
+    
+    if(screenFlashTimer > 0){
+      screenFlashTimer--;
+      float alpha = map(screenFlashTimer, 40, 0, 255,0);
+      fill(255,255,255, alpha);
+      rect(0,0, width, height);
+      
     }
   }
+  
+  
   public void serialEvent(String evt) {
   }
 }

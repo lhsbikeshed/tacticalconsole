@@ -35,7 +35,7 @@ Minim minim;
 ConsoleAudio consoleAudio;
 
 DropDisplay dropDisplay; //display for the drop scene
-WarpDisplay2 warpDisplay; //warp scene
+WarpDisplay warpDisplay; //warp scene
 WeaponsConsole2 weaponsDisplay;  //tactical weapons display
 SignalTracker signalTracker;    //signal tracker for nebula scene
 TowingDisplay towingDisplay;    //grappling hook display
@@ -109,7 +109,7 @@ void setup() {
   oscP5 = new OscP5(this, 12004);
   dropDisplay = new DropDisplay();
   //radarDisplay = new RadarDisplay();
-  warpDisplay = new WarpDisplay2();
+  warpDisplay = new WarpDisplay();
   weaponsDisplay = new WeaponsConsole2(oscP5, serverIP, this);
   signalTracker = new SignalTracker(oscP5, serverIP);
   //towingDisplay = new TowingDisplay(oscP5, serverIP);
