@@ -135,17 +135,20 @@ public class WeaponsConsole2 implements Display {
   void drawSideBar() {
     image(titleImage, 7, 5);
     //draw sidebar stuff
-    fill(255, 255, 0);
-    textFont(font, 12);
-    text("Smartbombs:" + shipState.smartBombsLeft, 776, 44);
-    text("Beam Power:" + (beamPower * 25) + "%", 776, 64);
-    text("Sensor Power:" + (sensorPower * 25) + "%", 776, 84);
+    fill(255, 255, 255);
+    textFont(font, 56);
+    text(shipState.smartBombsLeft, 212, 706);
+    fill(0,255,0);
+    rect(47, 742, 25, beamPower * -33);
+    rect(106, 742, 25, sensorPower * -33);
+   //text("Beam Power:" + (beamPower * 25) + "%", 776, 64);
+    //text("Sensor Power:" + (sensorPower * 25) + "%", 776, 84);
 
-    text("Max Beam Range: " + maxBeamRange, 780, 500);
-    text("Sensor range: " + sensorRanges[sensorPower - 1], 780, 520);
+   // text("Max Beam Range: " + maxBeamRange, 780, 500);
+    //text("Sensor range: " + sensorRanges[sensorPower - 1], 780, 520);
     synchronized(targets) {
       Collections.sort(targets);  //sorted by distance from ship
-      int ypos = 260;
+      int ypos = 144;
       for (TargetObject t : targets) {
         if (t.targetted) {
           fill(255, 0, 0);
@@ -186,27 +189,19 @@ public class WeaponsConsole2 implements Display {
     }
     //text in the scanning ID field
     fill(0, 255, 0);
-    text(scanString, 800, 190);
+    textFont(font, 70);
+    text(scanString, 727, 675);
 
 
 
 
-    if (hookArmed) {
-      if (blinkenBool) {
-        image(grappleButton, 790, 412);
-      } 
-      else {
-        image(grappleButtonD, 790, 412);
-      }
-    } 
-    else {
-      if (blinkenBool && fireEnabled) { 
-        image(beamButton, 790, 412);
-      }
-      if (blinkenBool && flareEnabled) { 
-        image(decoyButton, 790, 480);
-      }
+    
+   
+    if (blinkenBool && fireEnabled) { 
+      image(beamButton, 714, 431);
     }
+      
+    
 
     if (smartBombFireTime + 1000 > millis()) {
       float radius = (millis() - smartBombFireTime) / 1000.0f;
@@ -218,9 +213,9 @@ public class WeaponsConsole2 implements Display {
 
     //draw hull damage
     tint( (int)map(shipState.hullState, 0, 100, 255, 0), (int)map(shipState.hullState, 0, 100, 0, 255), 0);
-    image(hullStateImage, 721, 564);
+    image(hullStateImage, 486, 620);
     textFont(font, 23);
-    text((int)shipState.hullState + "%", 899, 747);
+    text((int)shipState.hullState + "%", 463, 646);
     noTint();
   }
 
