@@ -141,11 +141,7 @@ public class WeaponsConsole2 implements Display {
     fill(0,255,0);
     rect(47, 742, 25, beamPower * -33);
     rect(106, 742, 25, sensorPower * -33);
-   //text("Beam Power:" + (beamPower * 25) + "%", 776, 64);
-    //text("Sensor Power:" + (sensorPower * 25) + "%", 776, 84);
-
-   // text("Max Beam Range: " + maxBeamRange, 780, 500);
-    //text("Sensor range: " + sensorRanges[sensorPower - 1], 780, 520);
+    textFont(font, 14);
     synchronized(targets) {
       Collections.sort(targets);  //sorted by distance from ship
       int ypos = 144;
