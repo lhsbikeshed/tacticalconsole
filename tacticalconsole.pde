@@ -208,6 +208,10 @@ void dealWithSerial(String vals) {
   }
 }
 
+void mouseClicked(){
+  println("mx: " + mouseX + ", my: " + mouseY);
+}
+
 void probeCableState() {
   if (serialEnabled) {
     serialPort.write("C,");
@@ -539,11 +543,6 @@ void oscEvent(OscMessage theOscMessage) {
   else {
     currentScreen.oscMessage(theOscMessage);
   }
-}
-
-void mouseClicked() {
-   damageEffects.startEffect(1000);
-  println (":" + mouseX + "," + mouseY);
 }
 
 boolean decoyLightState = false;

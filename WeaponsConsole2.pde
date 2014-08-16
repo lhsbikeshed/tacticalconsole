@@ -34,7 +34,7 @@ public class WeaponsConsole2 implements Display {
   long missileStartTime = 0;
   float scannerAngle = 0;
   String scanString = "";
-  boolean isScanning = false;
+
   int scanTimeout = 100;
   int scanTargetIndex;
   int numMissiles = 0;
@@ -51,6 +51,13 @@ public class WeaponsConsole2 implements Display {
   boolean fireEnabled = false;
   boolean blinkenBool = false;
   long blinkenBoolTimer  =0;
+
+
+  public static final int SCAN_TYPING = 0;
+  public static final int SCAN_SCANNING = 1;
+  public static final int SCAN_FAILED = 2;
+  public static final int SCAN_OK = 3;
+  int scanningState = SCAN_TYPING;
 
   public boolean hookArmed = false;
 
@@ -122,14 +129,6 @@ public class WeaponsConsole2 implements Display {
     drawSideBar();
     stroke(255);
     fill(255);
-
-
-    //does the current target have hull/weapons/engines stats? If so draw them
-    String[] stats = {
-      "hullHealth", "weaponHealth", "engineHealth"
-    };
-    //textFont(font, 15);
-    //text("TARGET INFO:\r\n HULL: 100%\r\nWEAPONS: 100%\r\nENGINES: 100%", mouseX, mouseY);
   }
 
   void drawSideBar() {
@@ -138,9 +137,12 @@ public class WeaponsConsole2 implements Display {
     fill(255, 255, 255);
     textFont(font, 56);
     text(shipState.smartBombsLeft, 212, 706);
-    fill(0,255,0);
-    rect(47, 742, 25, beamPower * -33);
-    rect(106, 742, 25, sensorPower * -33);
+    //power gauges in bottom left
+    fill(0, 255, 0);
+    rect(47, 742, 25, beamPower * -20);
+    rect(106, 742, 25, sensorPower * -20);
+
+    //the target list on the right hand side
     textFont(font, 14);
     synchronized(targets) {
       Collections.sort(targets);  //sorted by distance from ship
@@ -183,21 +185,42 @@ public class WeaponsConsole2 implements Display {
         }
       }
     }
+
     //text in the scanning ID field
-    fill(0, 255, 0);
-    textFont(font, 70);
-    text(scanString, 727, 675);
+    //set its colour based on what its doing
+    fill(255);
+    textFont(font, 30);
+    switch(scanningState) {
+    case SCAN_TYPING:
+
+      fill(255);
+      break;
+    case SCAN_SCANNING:
+      text("LOCKING", 758, 737);
+      fill(0, 190, 0);
+      break;
+
+    case SCAN_OK:
+      if(globalBlinker) text("LOCKED", 758, 737);
+
+      fill(0, 255, 0);
+      break;
+    case SCAN_FAILED:
+      text("NO TARGET", 730, 737);
+
+      fill(255, 0, 0);
+      break;
+    }
+    textFont(font, 60);
+    text(scanString, 720, 675);
+    fill(255);
 
 
-
-
-    
-   
     if (blinkenBool && fireEnabled) { 
       image(beamButton, 714, 431);
     }
-      
-    
+
+
 
     if (smartBombFireTime + 1000 > millis()) {
       float radius = (millis() - smartBombFireTime) / 1000.0f;
@@ -314,7 +337,11 @@ public class WeaponsConsole2 implements Display {
         }
 
         if (t.dead) {
+          if(t == currentTarget){
+            scanningState = SCAN_TYPING;
+          }
           targets.remove(i);
+          
         }
 
         //scanning stuff
@@ -330,6 +357,7 @@ public class WeaponsConsole2 implements Display {
             osc.flush(myMessage, new NetAddress(serverIP, 12000));
             currentTarget = t;
             consoleAudio.playClip("targetLocked");
+            scanningState = SCAN_OK;
           }
           pushMatrix();
           translate(x, y);
@@ -386,44 +414,25 @@ public class WeaponsConsole2 implements Display {
 
   void serialEvent(String contents) {
     String action = contents.split(":")[1];
-
-
-
     if (action.equals("FIRELASER") ) {
-
-      if (hookArmed) {
-        OscMessage myMessage = new OscMessage("/system/targetting/fireGrappling");
-        osc.flush(myMessage, new NetAddress(serverIP, 12000));
-        println("Fire grapple");
+      OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
+      osc.flush(myMessage, new NetAddress(serverIP, 12000));
+      if (currentTarget != null && currentTarget.pos.mag() < maxBeamRange) {
+        consoleAudio.playClip("firing");
       } 
       else {
-        OscMessage myMessage = new OscMessage("/system/targetting/fireAtTarget");
-        osc.flush(myMessage, new NetAddress(serverIP, 12000));
-        if (currentTarget != null && currentTarget.pos.mag() < maxBeamRange) {
-          consoleAudio.playClip("firing");
-        } 
-        else {
-          consoleAudio.playClip("outOfRange");
-        }
-
-        println("Fire at target");
+        consoleAudio.playClip("outOfRange");
       }
+
+      println("Fire at target");
       return;
     }
 
-    if (action.equals("GRAPPLEFIRE")) {
-      OscMessage myMessage = new OscMessage("/system/targetting/fireGrappling");
-      osc.flush(myMessage, new NetAddress(serverIP, 12000));
-    } 
-    else if (action.equals("GRAPPLERELEASE")) {
-      OscMessage myMessage = new OscMessage("/system/targetting/releaseGrappling");
-      osc.flush(myMessage, new NetAddress(serverIP, 12000));
-    }
 
     if (action.equals("DECOY")) {
       if (shipState.smartBombsLeft > 0) {
         if (smartBombFireTime + 1000 < millis()) {
-          println("FLARE");
+
           OscMessage myMessage = new OscMessage("/system/targetting/fireFlare");
           osc.flush(myMessage, new NetAddress(serverIP, 12000));
 
@@ -437,23 +446,28 @@ public class WeaponsConsole2 implements Display {
       return;
     }
 
-    if (isScanning == false) {
-      if (action.equals("SCAN")) {
-        scanTarget();
-      } 
-      else {
-        println(action.charAt(0));
-        if ( action.charAt(0) >= '0' && action.charAt(0) <= '9') {
-          scanString = scanString + action;
-          if (scanString.length() >= 4 ) {
-            scanTarget();
-          }
+
+    if (action.equals("SCAN")) {
+      scanTarget();
+    } 
+    else {
+
+      if ( action.charAt(0) >= '0' && action.charAt(0) <= '9') {
+        if (scanningState != SCAN_TYPING) {
+          scanString = "";
+        }
+        scanString = scanString + action;
+
+        scanningState = SCAN_TYPING;
+        if (scanString.length() >= 4 ) {
+          scanTarget();
         }
       }
     }
   }
 
   void scanTarget() {
+
     currentTarget = null;
     println("scan");
 
@@ -482,16 +496,17 @@ public class WeaponsConsole2 implements Display {
 
         if (targetFound) {
           consoleAudio.playClip("targetting");
+          scanningState = SCAN_SCANNING;
         } 
         else {
           consoleAudio.playClip("outOfRange");
+          scanningState = SCAN_FAILED;
         }
       }
     } 
     catch (NumberFormatException e) {
     }
-
-    scanString = "";
+    //scanString = "";
   }
 
 
@@ -564,6 +579,9 @@ public class WeaponsConsole2 implements Display {
           println("target remove");
           if (t.targetted) {
             consoleAudio.playClip("targetDestroyed");
+          }
+          if (t.scanCountDown >= 0 ) {
+            scanningState = SCAN_TYPING;
           }
         }
       }
