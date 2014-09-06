@@ -122,7 +122,10 @@ void setup() {
   displayMap.put("selfdestruct", new DestructDisplay());
   displayMap.put("cablepuzzle", new CablePuzzleDisplay());
   // displayMap.put("towing", towingDisplay);
-  displayMap.put("pwned", new PwnedDisplay());
+  displayMap.put("pwned", new PwnedDisplay());  
+  displayMap.put("failureScreen", new FailureScreen());
+  
+  
   currentScreen = weaponsDisplay;
 
   bootDisplay = new BootDisplay();

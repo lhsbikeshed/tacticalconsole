@@ -254,6 +254,8 @@ public class WeaponsConsole2 implements Display {
         if (millis() - t.lastUpdateTime > 300) {
           if (t.targetted) {
             consoleAudio.playClip("targetDestroyed");
+            scanningState = SCAN_TYPING;
+            scanString = "";
           }
           targets.remove(i);
         }
@@ -579,6 +581,7 @@ public class WeaponsConsole2 implements Display {
           println("target remove");
           if (t.targetted) {
             consoleAudio.playClip("targetDestroyed");
+            scanningState = SCAN_TYPING;
           }
           if (t.scanCountDown >= 0 ) {
             scanningState = SCAN_TYPING;
