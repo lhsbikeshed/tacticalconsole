@@ -124,8 +124,8 @@ void setup() {
   // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());  
   displayMap.put("failureScreen", new FailureScreen());
-  
-  
+
+
   currentScreen = weaponsDisplay;
 
   bootDisplay = new BootDisplay();
@@ -211,7 +211,7 @@ void dealWithSerial(String vals) {
   }
 }
 
-void mouseClicked(){
+void mouseClicked() {
   println("mx: " + mouseX + ", my: " + mouseY);
 }
 
@@ -464,7 +464,7 @@ void oscEvent(OscMessage theOscMessage) {
     int sensorPower = theOscMessage.get(2).intValue() - 1;
     int internalPower = theOscMessage.get(1).intValue() - 1;
 
-   
+
     if (serialEnabled) {
       serialPort.write("L" +  beamPower + ",");
       charlesPort.write("P" + (propPower + 1));
@@ -543,6 +543,10 @@ void oscEvent(OscMessage theOscMessage) {
       serialPort.write("F,");
     }
   }
+  else if (theOscMessage.checkAddrPattern("/ship/effect/playSound")) {
+    String name = theOscMessage.get(0).stringValue();
+    consoleAudio.playClip(name);
+  } 
   else {
     currentScreen.oscMessage(theOscMessage);
   }
