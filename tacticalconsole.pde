@@ -124,9 +124,12 @@ void setup() {
   // displayMap.put("towing", towingDisplay);
   displayMap.put("pwned", new PwnedDisplay());  
   displayMap.put("failureScreen", new FailureScreen());
+  displayMap.put("restrictedArea", new RestrictedAreaScreen());
+  
 
 
-  currentScreen = weaponsDisplay;
+  //currentScreen = weaponsDisplay;
+  
 
   bootDisplay = new BootDisplay();
   displayMap.put("boot", bootDisplay);    ///THIS    
@@ -145,9 +148,14 @@ void setup() {
   //damage stuff
   damageEffects = new DamageEffect();
 
+  //set initial screen, probably gets overwritten from game shortly
+  changeDisplay(displayMap.get("weapons"));
+
   /*sync to current game screen*/
   OscMessage myMessage = new OscMessage("/game/Hello/TacticalStation");  
   oscP5.send(myMessage, new NetAddress(serverIP, 12000));
+  
+  
 }
 
 /* these are just for testing when serial devices arent available */
@@ -226,7 +234,9 @@ void probeCableState() {
 
 /* switch to a new display */
 void changeDisplay(Display d) {
-  currentScreen.stop();
+  if(currentScreen != null){
+    currentScreen.stop();
+  }
   currentScreen = d;
   currentScreen.start();
 }
